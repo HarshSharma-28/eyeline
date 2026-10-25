@@ -1,17 +1,39 @@
 name: Build and release
 
-# Push a tag like v1.0.1 to build Windows, macOS and Linux apps and publish them as a release.
-# You can also run it by hand from the Actions tab (it then rebuilds the release for the latest tag).
+# To release: bump "version" in package.json and push to main. If there's no release for that
+# version yet, this builds the Windows, macOS and Linux apps and publishes them as release v<version>.
+# Running it by hand from the Actions tab rebuilds the release for the current version.
 on:
   push:
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.v.outputs.tag }}
+      build: ${{ steps.v.outputs.build }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          TAG="v$(node -p "require('./package.json').version")"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || ! gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=false" >> "$GITHUB_OUTPUT"; echo "Release $TAG already exists; nothing to build."
+          fi
+
   build-linux-windows:
+    needs: check
+    if: needs.check.outputs.build == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +52,8 @@ jobs:
             models/vosk-model-small-en-us-0.15.tar.gz
 
   build-mac:
+    needs: check
+    if: needs.check.outputs.build == 'true'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,25 +70,25 @@ jobs:
             dist/Eyeline-Mac-Intel.zip
 
   release:
-    needs: [build-linux-windows, build-mac]
+    needs: [check, build-linux-windows, build-mac]
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
       - uses: actions/download-artifact@v4
         with: { path: out, merge-multiple: true }
+      - name: Collect files
+        run: mkdir rel && find out -type f -exec mv {} rel/ \; && ls -la rel
       - name: Publish the voice model (used by npm install)
         run: |
           if ! gh release view voice-models >/dev/null 2>&1; then
-            gh release create voice-models out/models/vosk-model-small-en-us-0.15.tar.gz --prerelease --title "Voice models" \
+            gh release create voice-models rel/vosk-model-small-en-us-0.15.tar.gz --target "$GITHUB_SHA" --prerelease --title "Voice models" \
               --notes "Voice model used by \`npm install\` and \`npm run fetch-model\`. The app downloads already include it. Vosk small English (US) model 0.15, Apache 2.0, from https://alphacephei.com/vosk/models, repacked as .tar.gz for vosk-browser."
           fi
       - name: Publish the app release
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then TAG="$(git describe --tags --abbrev=0 --match 'v*')"; fi
-          gh release delete "$TAG" --yes 2>/dev/null || true
-          gh release create "$TAG" out/Eyeline-Windows.zip out/Eyeline-Mac-AppleSilicon.zip out/Eyeline-Mac-Intel.zip out/Eyeline-Linux-x64.tar.gz \
+          TAG="${{ needs.check.outputs.tag }}"
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" --target "$GITHUB_SHA" rel/Eyeline-Windows.zip rel/Eyeline-Mac-AppleSilicon.zip rel/Eyeline-Mac-Intel.zip rel/Eyeline-Linux-x64.tar.gz \
             --title "Eyeline ${TAG#v}" --latest --notes-file .github/release-notes.md

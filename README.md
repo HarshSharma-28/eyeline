@@ -120,7 +120,7 @@ npm run dist         # all of them
 
 All four builds can be made on Linux or macOS. Built on a Mac, the Mac apps are ad-hoc signed; anywhere else they come out unsigned. Notarizing them for distribution needs an Apple Developer ID.
 
-Releases are built by GitHub Actions: pushing a tag such as `v1.0.1` builds the four downloads on GitHub's Linux and Mac machines and publishes them as a release ([workflow](.github/workflows/release.yml)).
+Releases are built by GitHub Actions. Bump `version` in `package.json` and push to `main`, and the [release workflow](.github/workflows/release.yml) builds the four downloads on GitHub's Linux and Mac machines and publishes them as a new release.
 
 ### Project layout
 
