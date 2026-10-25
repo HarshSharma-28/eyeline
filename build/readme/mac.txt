@@ -1,0 +1,39 @@
+Eyeline for Mac
+===============
+
+Which download?  Apple menu > About This Mac.
+  "Chip: Apple M1/M2/M3/M4..."  -> Apple Silicon version
+  "Processor: Intel..."          -> Intel version
+
+Install (about 2 minutes, only once)
+1. Unzip, then drag Eyeline.app into your Applications folder.
+2. Open Terminal (Applications > Utilities > Terminal), paste this line and press Return:
+
+   xattr -cr /Applications/Eyeline.app && codesign --force --deep --sign - /Applications/Eyeline.app
+
+   Why: Eyeline isn't from the App Store, so macOS blocks it until it is unblocked
+   and signed on your own Mac. This line does both, using Apple's own built-in tools.
+3. Open Eyeline from Applications. When macOS asks for microphone access, click Allow.
+
+Using it
+  The overlay floats at the top of your screen, just under the camera, and stays
+  above full-screen apps too. Drag it by the move button or the empty parts of its bars.
+
+Shortcuts (work in any app)
+  Cmd+Shift+Space        start / pause
+  Cmd+Shift+Up/Down      back / forward a line
+  Cmd+Shift+Left/Right   scroll speed (Auto mode)
+  Cmd+Shift+R            restart
+  Cmd+Shift+E            open the Eyeline window
+  Cmd+Shift+H            show / hide the overlay
+  Cmd+Shift+L            turn click-through on / off
+
+Screen recording and screen sharing on a Mac
+  "Hide from screen recordings" hides Eyeline from Google Meet in Chrome.
+  On macOS 15 (Sequoia) and later, Apple no longer lets apps hide from Zoom, Teams,
+  QuickTime, screenshots or recent OBS. There is no setting that changes this.
+  To keep Eyeline out of a recording or a call, share or record a single window
+  (for example just your browser or slides) instead of the whole screen.
+
+Voice follow runs offline on your Mac. English (US accent) is built in.
+English (Indian accent) and Hindi download once (about 35-45 MB) the first time you pick them.

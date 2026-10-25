@@ -1,0 +1,36 @@
+{
+  "name": "eyeline",
+  "productName": "Eyeline",
+  "version": "1.0.0",
+  "description": "A teleprompter that floats under your webcam, follows your voice offline, and can hide from screen recordings.",
+  "main": "main.js",
+  "author": "Harsh Sharma",
+  "license": "MIT",
+  "homepage": "https://github.com/HarshSharma-28/eyeline#readme",
+  "repository": { "type": "git", "url": "https://github.com/HarshSharma-28/eyeline.git" },
+  "bugs": { "url": "https://github.com/HarshSharma-28/eyeline/issues" },
+  "keywords": ["teleprompter", "electron", "speech-recognition", "vosk", "overlay", "content-creation", "eye-contact"],
+  "scripts": {
+    "postinstall": "node scripts/setup.js",
+    "start": "electron .",
+    "fetch-model": "node scripts/fetch-model.js",
+    "dist:win": "node scripts/package.js win",
+    "dist:mac": "node scripts/package.js mac",
+    "dist:linux": "node scripts/package.js linux",
+    "dist": "node scripts/package.js all"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "@fontsource/geist": "^5.3.0",
+    "@fontsource/geist-mono": "^5.3.0",
+    "electron": "^38.2.0",
+    "mammoth": "^1.8.0",
+    "pe-library": "^2.0.1",
+    "resedit": "^2.0.3",
+    "vosk-browser": "^0.0.8"
+  },
+  "engines": { "node": ">=20" }
+}

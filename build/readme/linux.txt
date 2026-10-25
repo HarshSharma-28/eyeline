@@ -1,0 +1,29 @@
+Eyeline for Linux (64-bit)
+==========================
+
+1. Extract this folder somewhere permanent (for example ~/Apps/Eyeline).
+2. Start Eyeline with:   ./eyeline.sh
+   (or double-click eyeline.sh and choose "Run" if your file manager offers it)
+3. Paste your script and press Start. Allow the microphone if your desktop asks.
+
+Works on X11 and on Wayland desktops (it runs through XWayland so the overlay can
+stay on top and be moved). A compositor is needed for the see-through background;
+GNOME, KDE Plasma, Cinnamon and Xfce all have one.
+
+Shortcuts (work in any app on X11 sessions)
+  Ctrl+Shift+Space       start / pause
+  Ctrl+Shift+Up/Down     back / forward a line
+  Ctrl+Shift+Left/Right  scroll speed (Auto mode)
+  Ctrl+Shift+R           restart
+  Ctrl+Shift+E           open the Eyeline window
+  Ctrl+Shift+H           show / hide the overlay
+  Ctrl+Shift+L           turn click-through on / off
+On Wayland, these shortcuts work while an Eyeline window is focused; the on-screen buttons always work.
+
+Screen recording and screen sharing on Linux
+  Linux doesn't let apps hide themselves from screen capture, so Eyeline will show
+  up in whole-screen recordings and shares. Share or record a single window instead
+  (for example just your browser or slides) to keep it out.
+
+Voice follow runs offline. English (US accent) is built in.
+English (Indian accent) and Hindi download once (about 35-45 MB) the first time you pick them.

@@ -1,0 +1,281 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Eyeline</title>
+<style>
+@font-face{font-family:"Geist";font-weight:400;src:url(fonts/geist-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Geist";font-weight:500;src:url(fonts/geist-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Geist";font-weight:600;src:url(fonts/geist-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Geist Mono";font-weight:400;src:url(fonts/geist-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Geist Mono";font-weight:500;src:url(fonts/geist-mono-latin-500-normal.woff2) format("woff2")}
+/* Layout: top toolbar (brand · overlay state · transport), then script pane | settings pane, status strip at the bottom. */
+:root{
+  --bg:#ffffff; --bg-2:#f7f7f8; --ink:#0b0b0d; --ink-2:#55555c; --ink-3:#8b8b94;
+  --line:#e9e9ed; --line-2:#d9d9df; --accent:#2b6ae6; --accent-soft:#eef3fd; --rec:#e5484d; --ok:#2f9e5b;
+  --sans:"Geist","Segoe UI",system-ui,sans-serif; --mono:"Geist Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0a0a0c; --bg-2:#111114; --ink:#f4f4f6; --ink-2:#a3a3ad; --ink-3:#71717b;
+    --line:#1f1f24; --line-2:#2d2d34; --accent:#6199f6; --accent-soft:#131c2c; --rec:#ef5b60; --ok:#46b979; color-scheme:dark; }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+
+.top{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;letter-spacing:-.01em;margin-right:6px}
+.lens{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center}
+.lens::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.pill{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:3px 9px;border-radius:99px;border:1px solid var(--line-2);color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.pill i{width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+.pill.on i{background:var(--ok)}
+.spacer{flex:1}
+.btn{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);height:32px;padding:0 14px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn:hover{background:var(--bg-2)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);min-width:116px;justify-content:center}
+.btn.primary::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--rec)}
+.btn.primary:hover{opacity:.88}
+.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 330px}
+.sheet{display:flex;flex-direction:column;min-width:0;min-height:0}
+.tools{display:flex;align-items:center;gap:8px;padding:12px 18px}
+.stats{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+textarea{flex:1;min-height:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;line-height:1.7;padding:4px 20px 20px;resize:none;outline:none}
+textarea::placeholder{color:var(--ink-3)}
+textarea.drop{background:var(--accent-soft)}
+.hint{margin:0;padding:10px 20px;font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line)}
+.hint code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);background:var(--bg-2);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+
+.rack{border-left:1px solid var(--line);overflow-y:auto;min-height:0}
+.sec{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.sec h3{margin:0;font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.row{display:flex;flex-direction:column;gap:6px}
+.label{font-size:13px;font-weight:500;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.label output{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;background:var(--bg-2);border:1px solid var(--line);border-radius:8px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{padding:6px;text-align:center;font-size:13px;color:var(--ink-2);cursor:pointer;border-radius:6px}
+.seg input:checked + label{background:var(--bg);color:var(--ink);font-weight:500;box-shadow:0 0 0 1px var(--line-2),0 1px 2px rgba(0,0,0,.06)}
+.seg input:focus-visible + label{outline:2px solid var(--accent)}
+.note{margin:0;font-size:12px;line-height:1.5;color:var(--ink-3)}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+select{font:inherit;font-size:13px;height:32px;padding:0 8px;border:1px solid var(--line-2);border-radius:8px;background:var(--bg);color:var(--ink)}
+.sw{display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer}
+.sw input{accent-color:var(--accent);width:15px;height:15px;margin:2px 0 0;flex:none}
+.sw small{display:block;color:var(--ink-3);font-size:12px;line-height:1.45}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px;color:var(--ink-2)}
+kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border-radius:4px;padding:1px 5px;color:var(--ink-2);background:var(--bg-2);white-space:nowrap}
+
+.status{display:flex;align-items:center;gap:14px;padding:9px 18px;border-top:1px solid var(--line);background:var(--bg-2);font-size:12.5px;color:var(--ink-2)}
+.status .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+.status .dot.live{background:var(--rec)}
+.status .dot.auto{background:var(--accent)}
+.status .err{color:var(--rec)}
+.bar{flex:0 0 160px;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+@media (max-width:860px){.main{grid-template-columns:1fr}.rack{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="lens" aria-hidden="true"></span>Eyeline</div>
+  <span class="pill" id="ovPill"><i></i><span id="ovTxt">Overlay hidden</span></span>
+  <span class="spacer"></span>
+  <button class="btn" id="bShow" type="button">Show overlay</button>
+  <button class="btn" id="bRestart" type="button">Restart</button>
+  <button class="btn primary" id="bPlay" type="button">Start</button>
+</header>
+
+<div class="main">
+  <section class="sheet" aria-label="Script">
+    <div class="tools">
+      <button class="btn" id="bUpload" type="button">Upload .txt or .docx</button>
+      <input type="file" id="file" accept=".txt,.md,.docx,text/plain" hidden>
+      <button class="btn" id="bClear" type="button">Clear</button>
+      <span class="stats" id="stats"></span>
+    </div>
+    <textarea id="script" spellcheck="true" aria-label="Your script" placeholder="Paste your script here, or drop a .txt or .docx file."></textarea>
+    <p class="hint">Text in square brackets, like <code>[pause]</code> or <code>[smile]</code>, shows as a cue and isn't expected to be spoken. Leave a blank line between paragraphs. Edits reach the overlay as you type.</p>
+  </section>
+
+  <aside class="rack" aria-label="Settings">
+    <div class="sec">
+      <h3>Follow</h3>
+      <div class="seg">
+        <input type="radio" name="drive" id="dVoice" value="voice"><label for="dVoice">My voice</label>
+        <input type="radio" name="drive" id="dAuto" value="auto"><label for="dAuto">Auto-scroll</label>
+      </div>
+      <div class="row" id="rLang">
+        <label class="label" for="lang">Voice model <output id="oLang"></output></label>
+        <select id="lang"></select>
+        <p class="note" id="langNote"></p>
+      </div>
+      <label class="sw" id="rLock"><input type="checkbox" id="lockScript"><span>Only listen for words in my script<small>More accurate. Ad-libs are ignored instead of guessed.</small></span></label>
+      <div class="row" id="rWpm">
+        <label class="label" for="wpm">Scroll speed <output id="oWpm"></output></label>
+        <input type="range" id="wpm" min="80" max="220" step="5">
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>Overlay</h3>
+      <div class="seg">
+        <input type="radio" name="mode" id="mScroll" value="scroll"><label for="mScroll">Moving lines</label>
+        <input type="radio" name="mode" id="mPhrase" value="phrase"><label for="mPhrase">One phrase</label>
+      </div>
+      <div class="row"><label class="label" for="size">Text size <output id="oSize"></output></label><input type="range" id="size" min="20" max="80" step="1"></div>
+      <div class="row"><label class="label" for="width">Width <output id="oWidth"></output></label><input type="range" id="width" min="560" max="1600" step="10"></div>
+      <div class="row" id="rLines"><label class="label" for="lines">Lines shown <output id="oLines"></output></label><input type="range" id="lines" min="1" max="8" step="1"></div>
+      <div class="row" id="rPlen"><label class="label" for="plen">Words per phrase <output id="oPlen"></output></label><input type="range" id="plen" min="2" max="8" step="1"></div>
+      <div class="row"><label class="label" for="bg">Background <output id="oBg"></output></label><input type="range" id="bg" min="0" max="95" step="5"></div>
+      <label class="sw"><input type="checkbox" id="shadow"><span>Text shadow<small>Keeps words readable over bright windows when the background is below 60%.</small></span></label>
+      <label class="sw"><input type="checkbox" id="clickThrough"><span>Clicks pass through the text<small>Work in the app underneath while you read. The control bars stay clickable.</small></span></label>
+      <label class="sw"><input type="checkbox" id="compact"><span>Compact view<small>Hides the transcript bar and panel buttons, leaving the main bar and your script.</small></span></label>
+      <label class="sw"><input type="checkbox" id="textFirst"><span>Script above the controls<small>Puts the words closest to the webcam, with the control bar underneath.</small></span></label>
+      <label class="sw"><input type="checkbox" id="protect"><span>Hide from screen recordings<small id="protectNote">Eyeline won't appear in screen recordings, screenshots or screen sharing. You still see it and it keeps working normally.</small></span></label>
+      <button class="btn" id="bReset" type="button">Move overlay under the camera</button>
+    </div>
+
+    <div class="sec">
+      <h3>Shortcuts · work in any app</h3>
+      <div class="keys">
+        <kbd>Ctrl Shift Space</kbd><span>Start / pause</span>
+        <kbd>Ctrl Shift ↑ ↓</kbd><span>Back / forward a line</span>
+        <kbd>Ctrl Shift ← →</kbd><span>Scroll speed</span>
+        <kbd>Ctrl Shift R</kbd><span>Restart</span>
+        <kbd>Ctrl Shift H</kbd><span>Show / hide overlay</span>
+        <kbd>Ctrl Shift L</kbd><span>Toggle click-through</span>
+        <kbd>Ctrl Shift E</kbd><span>Open this window</span>
+      </div>
+      <p class="note">Drag the overlay by its control bar or the move button. Its position is remembered.</p>
+    </div>
+  </aside>
+</div>
+
+<footer class="status">
+  <span class="dot" id="sDot"></span><span id="sMsg">Ready</span>
+  <span class="spacer"></span>
+  <span class="bar" aria-hidden="true"><i id="sBar"></i></span>
+  <span class="mono" id="sPct">0%</span><span class="mono" id="sTime">0:00</span>
+</footer>
+
+<script src="vendor/mammoth.browser.min.js"></script>
+<script>
+(async () => {
+const $ = id => document.getElementById(id);
+const api = window.api;
+const SAMPLE = `[smile] Hey, welcome back to the channel.
+
+If you've ever sat down on a Monday morning with no idea where to start, this video is for you. Today I'm going to show you the thirty minute routine I use every Sunday to plan my entire week.
+
+[pause]
+
+It's simple. You don't need a fancy app, and you don't need to be a morning person. All you need is a notebook, a calendar, and a little honesty about how much time you really have.
+
+Here's what we'll cover. First, how to get everything out of your head and onto paper. Second, how to pick the three things that actually matter this week. And third, how to protect time for them before everyone else claims it.
+
+[look at camera] By the end of this video you'll have a plan you can start using tonight. So grab a pen, and let's get into it.`;
+
+const PLATFORM = api.platform || 'win32';
+if (PLATFORM === 'darwin') document.querySelectorAll('kbd').forEach(k => k.textContent = k.textContent.replace(/Ctrl Shift/g, '⌘ Shift'));
+const PROTECT_NOTE = {
+  darwin: 'Hides Eyeline from Google Meet in Chrome. On macOS 15 and later, Zoom, Teams, QuickTime and screenshots can still capture it, so share a single window instead of your whole screen.',
+  linux: 'Linux doesn’t let apps hide from screen capture. To keep Eyeline out, share or record a single window instead of your whole screen.'
+}[PLATFORM];
+if (PROTECT_NOTE) $('protectNote').textContent = PROTECT_NOTE;
+const st = await api.invoke('get-state');
+let S = st.settings, models = st.models;
+const ta = $('script');
+ta.value = st.script == null ? SAMPLE : st.script;
+if (st.script == null) api.send('set-script', ta.value);
+
+const fmt = sec => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); };
+function wordCount(t){ let c = 0, cue = false; t.split(/\s+/).filter(Boolean).forEach(w => { const isCue = cue || w.includes('['); if (w.includes('[') && !w.includes(']')) cue = true; if (w.includes(']')) cue = false; if (!isCue && /[\p{L}\p{N}]/u.test(w)) c++; }); return c; }
+function stats(){ const c = wordCount(ta.value); $('stats').textContent = c ? `${c} words · about ${fmt(c / S.wpm * 60)} at ${S.wpm} wpm` : 'No words yet'; }
+let sendT = 0;
+ta.addEventListener('input', () => { stats(); clearTimeout(sendT); sendT = setTimeout(() => api.send('set-script', ta.value), 250); });
+$('bClear').onclick = () => { ta.value = ''; ta.dispatchEvent(new Event('input')); ta.focus(); };
+$('bUpload').onclick = () => $('file').click();
+async function readFile(f){
+  if (!f) return;
+  try{
+    let text;
+    if (/\.docx$/i.test(f.name)) text = (await window.mammoth.extractRawText({arrayBuffer: await f.arrayBuffer()})).value;
+    else if (/\.(txt|md|text)$/i.test(f.name) || (f.type || '').startsWith('text/')) text = await f.text();
+    else { setMsg('That file type isn’t supported. Use .txt or .docx, or paste the text.', true); return; }
+    ta.value = text.replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim(); ta.dispatchEvent(new Event('input'));
+  }catch(e){ setMsg('Couldn’t read that file. Save it as .txt, or paste the text in.', true); }
+}
+$('file').onchange = e => { readFile(e.target.files[0]); e.target.value = ''; };
+ta.addEventListener('dragover', e => { e.preventDefault(); ta.classList.add('drop'); });
+ta.addEventListener('dragleave', () => ta.classList.remove('drop'));
+ta.addEventListener('drop', e => { e.preventDefault(); ta.classList.remove('drop'); if (e.dataTransfer.files.length) readFile(e.dataTransfer.files[0]); });
+
+/* settings */
+const SIZES = {en: 'about 40 MB'};
+function fillLang(){
+  const sel = $('lang'); sel.innerHTML = '';
+  for (const [k, m] of Object.entries(models)){
+    const o = document.createElement('option'); o.value = k; o.textContent = m.label; sel.appendChild(o);
+  }
+  sel.value = S.lang;
+  const m = models[S.lang];
+  $('oLang').textContent = m && m.ready ? 'ready' : 'not downloaded';
+  $('langNote').textContent = m && m.ready
+    ? 'Runs on this computer. Nothing you say leaves your PC.'
+    : 'Downloads once (about 35–45 MB) the first time you press Start, then works offline.';
+}
+function sync(){
+  $(S.drive === 'voice' ? 'dVoice' : 'dAuto').checked = true;
+  $(S.mode === 'scroll' ? 'mScroll' : 'mPhrase').checked = true;
+  for (const k of ['wpm','size','width','lines','plen','bg']) $(k).value = S[k];
+  for (const k of ['lockScript','shadow','clickThrough','protect','compact','textFirst']) $(k).checked = !!S[k];
+  $('oWpm').textContent = S.wpm + ' wpm';
+  $('oSize').textContent = S.size + ' px';
+  $('oWidth').textContent = S.width + ' px';
+  $('oLines').textContent = S.lines;
+  $('oPlen').textContent = S.plen;
+  $('oBg').textContent = S.bg === 0 ? 'clear' : S.bg + '%';
+  $('rLang').hidden = $('rLock').hidden = S.drive !== 'voice';
+  $('rWpm').hidden = S.drive !== 'auto';
+  $('rPlen').hidden = S.mode !== 'phrase';
+  fillLang(); stats();
+}
+function set(p){ S = {...S, ...p}; api.send('set-settings', p); sync(); }
+document.querySelectorAll('input[name=drive]').forEach(r => r.onchange = () => set({drive: r.value}));
+document.querySelectorAll('input[name=mode]').forEach(r => r.onchange = () => set({mode: r.value}));
+for (const k of ['wpm','size','width','lines','plen','bg']) $(k).addEventListener('input', e => set({[k]: +e.target.value}));
+for (const k of ['lockScript','shadow','clickThrough','protect','compact','textFirst']) $(k).addEventListener('change', e => set({[k]: e.target.checked}));
+$('lang').onchange = e => set({lang: e.target.value});
+$('bReset').onclick = () => api.send('cmd', 'reset-position');
+sync();
+
+/* transport */
+let ovVisible = false;
+$('bShow').onclick = () => api.send('cmd', ovVisible ? 'hide' : 'show');
+$('bPlay').onclick = () => api.send('cmd', 'toggle');
+$('bRestart').onclick = () => api.send('cmd', 'restart');
+api.on('overlay-visible', v => { ovVisible = v; $('ovPill').classList.toggle('on', v); $('ovTxt').textContent = v ? 'Overlay on screen' : 'Overlay hidden'; $('bShow').textContent = v ? 'Hide overlay' : 'Show overlay'; });
+api.on('settings', s => { S = s; sync(); });
+api.on('models', m => { models = m; fillLang(); });
+api.on('model-progress', m => { if (m.phase === 'download') setMsg(`Downloading ${models[m.lang]?.label || ''} voice model · ${m.pct}%`); else if (m.phase === 'unpack') setMsg('Preparing voice model…'); });
+function setMsg(t, err){ const el = $('sMsg'); el.textContent = t; el.className = err ? 'err' : ''; }
+api.on('status', s => {
+  $('bPlay').textContent = s.running || s.counting ? 'Pause' : 'Start';
+  $('sDot').className = 'dot' + (s.running ? (s.drive === 'voice' ? (s.listening ? ' live' : '') : ' auto') : '');
+  setMsg(s.message, s.error);
+  const pct = Math.round(s.progress * 100);
+  $('sBar').style.width = pct + '%'; $('sPct').textContent = pct + '%'; $('sTime').textContent = fmt(s.elapsed);
+});
+document.addEventListener('keydown', e => {
+  if (e.target === ta) return;
+  if (e.key === ' '){ e.preventDefault(); api.send('cmd', 'toggle'); }
+});
+})();
+</script>
+</body>
+</html>

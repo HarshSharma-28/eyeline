@@ -1,0 +1,582 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Eyeline overlay</title>
+<style>
+@font-face{font-family:"Geist";font-weight:400;src:url(fonts/geist-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Geist";font-weight:500;src:url(fonts/geist-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Geist";font-weight:600;src:url(fonts/geist-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Geist Mono";font-weight:400;src:url(fonts/geist-mono-latin-400-normal.woff2) format("woff2")}
+/* Overlay layout: floating control bar → "heard" bar (live transcript chips) → script panel.
+   Everything floats on a transparent window; gaps between pieces let clicks through. */
+:root{
+  --ink:#f3f3f5; --ink-2:#b4b4bc; --ink-3:#85858e; --done:rgba(243,243,245,.32);
+  --shell:rgba(52,52,57,.94); --shell-line:rgba(255,255,255,.14);
+  --btn:rgba(24,24,27,.72); --btn-line:rgba(255,255,255,.09); --btn-hover:rgba(255,255,255,.10);
+  --chip:rgba(255,255,255,.08); --kbd:rgba(255,255,255,.09);
+  --panel-rgb:36,36,40; --bgA:.9; --mark:#6aa1ff; --cue:#a9c4ff; --rec:#e5484d; --live:#34c759;
+  --sans:"Geist","Segoe UI",system-ui,sans-serif; --mono:"Geist Mono",Consolas,monospace;
+}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:transparent;overflow:hidden}
+body{font-family:var(--sans);color:var(--ink);user-select:none;-webkit-user-select:none;font-size:14px;-webkit-font-smoothing:antialiased}
+#box{position:absolute;top:0;left:20px;right:20px;padding-top:4px;display:flex;flex-direction:column;align-items:center;gap:8px}
+#box.textFirst{flex-direction:column-reverse}
+#box.textFirst #panel{order:0}
+
+/* floating bars */
+.bar{display:flex;align-items:center;gap:6px;padding:6px;border-radius:13px;background:var(--shell);
+  box-shadow:inset 0 0 0 1px var(--shell-line),0 4px 14px rgba(0,0,0,.24);max-width:100%;box-sizing:border-box}
+button{font:inherit;color:var(--ink);cursor:pointer}
+.key{display:inline-flex;align-items:center;gap:9px;height:34px;padding:0 8px 0 12px;border-radius:9px;background:var(--btn);border:0;
+  box-shadow:inset 0 0 0 1px var(--btn-line);font-size:14px;font-weight:500;white-space:nowrap}
+.key:hover{background:#2c2c31}
+.key kbd{font-family:var(--sans);font-size:11.5px;font-weight:500;color:var(--ink-2);background:var(--kbd);border-radius:6px;padding:3px 6px;letter-spacing:.02em}
+.key.sm{height:28px;padding:0 6px;gap:6px;font-size:12.5px}
+.key.sm.only{padding:0 4px}
+.ico{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--btn);border:0;box-shadow:inset 0 0 0 1px var(--btn-line);color:var(--ink);position:relative;flex:none}
+.ico:hover{background:#2c2c31}
+.ico svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ico.sm{width:28px;height:28px}
+.ico.sm svg{width:15px;height:15px}
+.ico .badge{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--rec);box-shadow:0 0 0 2px var(--shell);display:none}
+.ico.live .badge{display:block}
+.drag{cursor:grab}
+.drag:active{cursor:grabbing}
+body.dragging,body.dragging *{cursor:grabbing!important}
+body.dragging .bar{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),0 8px 22px rgba(0,0,0,.32)}
+.end{height:34px;padding:0 16px;border-radius:9px;border:0;background:var(--rec);color:#fff;font-size:14px;font-weight:600}
+.end:hover{filter:brightness(1.08)}
+.sep{width:1px;height:22px;background:var(--shell-line);margin:0 2px}
+
+/* heard bar */
+#heard{width:100%}
+.meter{display:inline-flex;align-items:center;justify-content:center;gap:3px;width:34px;height:34px;border-radius:9px;background:var(--btn);box-shadow:inset 0 0 0 1px var(--btn-line);flex:none}
+.meter i{width:3px;height:4px;border-radius:2px;background:var(--ink-3);transition:height .08s}
+.meter.on i{background:var(--live)}
+#chips{flex:1;min-width:0;display:flex;align-items:center;gap:6px;overflow:hidden;height:34px;padding:0 4px;border-radius:9px;background:var(--btn);box-shadow:inset 0 0 0 1px var(--btn-line)}
+.chip{flex:none;font-size:13.5px;font-weight:500;padding:5px 10px;border-radius:8px;background:var(--chip);white-space:nowrap}
+.chip.dim{background:transparent;color:var(--ink-3);font-weight:400}
+.chip.warn{background:rgba(229,72,77,.16);color:#ffb3b5}
+.seg{display:inline-flex;padding:3px;border-radius:9px;background:var(--btn);box-shadow:inset 0 0 0 1px var(--btn-line);flex:none}
+.seg button{border:0;background:transparent;color:var(--ink-2);font-size:12.5px;font-weight:500;height:28px;padding:0 10px;border-radius:7px}
+.seg button.on{background:#3a3a40;color:var(--ink)}
+.spd{display:inline-flex;align-items:center;height:34px;border-radius:9px;background:var(--btn);box-shadow:inset 0 0 0 1px var(--btn-line);flex:none}
+.spd button{border:0;background:transparent;width:28px;height:34px;font-size:16px;color:var(--ink-2)}
+.spd span{font-family:var(--mono);font-size:12px;color:var(--ink-2);min-width:60px;text-align:center;font-variant-numeric:tabular-nums}
+
+/* script panel */
+#panel{width:100%;box-sizing:border-box;border-radius:16px;background:rgba(var(--panel-rgb),var(--bgA));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),0 6px 18px rgba(0,0,0,.26);overflow:hidden}
+#panel.clear{box-shadow:none}
+#phead{display:flex;align-items:center;gap:6px;padding:8px 10px 2px}
+#pinfo{font-family:var(--mono);font-size:12px;color:var(--ink-3);margin-left:6px;font-variant-numeric:tabular-nums}
+.grow{flex:1}
+#body{position:relative;padding:10px 22px 16px}
+#view{position:relative;overflow:hidden}
+#view.fade{-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,.4) 0,rgba(0,0,0,.4) var(--row0),#000 calc(var(--row0) + .2em),#000 calc(100% - .6em),rgba(0,0,0,.4) 100%)}
+#view.fade0{-webkit-mask-image:linear-gradient(to bottom,#000 0,#000 calc(100% - .6em),rgba(0,0,0,.4) 100%)}
+#track{position:absolute;left:0;right:0;top:0;font-weight:500;line-height:1.38;letter-spacing:-.012em;will-change:transform}
+#track p{margin:0}
+body.shadow #track,body.shadow #phrase{text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 12px rgba(0,0,0,.55)}
+body.shadow #track span.done,body.shadow #pcur span.done{text-shadow:0 1px 2px rgba(0,0,0,.35)}
+#track span{transition:color .2s}
+#track span.done,#pcur span.done{color:var(--done)}
+#track span.cue{color:var(--cue);font-weight:400;font-style:italic}
+#track span.now,#pcur span.now{text-decoration:underline;text-decoration-color:var(--mark);text-decoration-thickness:.07em;text-underline-offset:.2em}
+#phrase{position:relative;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:.15em}
+#pcue{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cue)}
+#pcur{font-weight:600;line-height:1.2;letter-spacing:-.015em}
+#pnext{font-weight:500;line-height:1.25;font-size:.55em;color:var(--done)}
+#count{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;font-size:44px;color:var(--ink);font-variant-numeric:tabular-nums}
+#box.compact #heard,#box.compact #phead{display:none}
+</style>
+</head>
+<body class="paused">
+<div id="box">
+  <div id="toolbar" class="bar hit">
+    <span class="ico" id="icMic" title="Microphone"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><i class="badge"></i></span>
+    <button class="key" id="bPlay" type="button"><span id="tPlay">Start</span><kbd>Ctrl ⇧ Space</kbd></button>
+    <button class="key" id="bRestart" type="button">Restart<kbd>Ctrl ⇧ R</kbd></button>
+    <button class="key" id="bScript" type="button">Script<kbd>Ctrl ⇧ E</kbd></button>
+    <span class="sep"></span>
+    <span class="ico drag" id="bMove" title="Drag to move" role="button" aria-label="Drag to move the overlay"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></span>
+    <button class="ico" id="bCompact" type="button" title="Compact view"><svg viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></button>
+    <button class="ico" id="bMore" type="button" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    <button class="end" id="bEnd" type="button" title="Stop and hide (Ctrl+Shift+H)">End</button>
+  </div>
+
+  <div id="heard" class="bar hit">
+    <span class="meter" id="meter"><i></i><i></i><i></i><i></i></span>
+    <div id="chips"><span class="chip dim">Words you say appear here</span></div>
+    <div class="seg" id="segDrive"><button type="button" data-d="voice">Voice</button><button type="button" data-d="auto">Auto</button></div>
+    <div class="spd" id="spd" hidden><button type="button" id="bSlow" aria-label="Slower">−</button><span id="wpm">140 wpm</span><button type="button" id="bFast" aria-label="Faster">+</button></div>
+  </div>
+
+  <div id="panel">
+    <div id="phead" class="hit">
+      <button class="key sm only" id="bBack" type="button" title="Back a line"><kbd>Ctrl ⇧ ↑</kbd></button>
+      <button class="key sm only" id="bFwd" type="button" title="Forward a line"><kbd>Ctrl ⇧ ↓</kbd></button>
+      <span id="pinfo">0% · 0:00</span>
+      <span class="grow"></span>
+      <button class="key sm" id="bSmaller" type="button" title="Smaller text">A−</button>
+      <button class="key sm" id="bBigger" type="button" title="Larger text">A+</button>
+      <button class="ico sm" id="bExpand" type="button" title="Show more lines"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button>
+    </div>
+    <div id="body">
+      <div id="view"><div id="track"></div></div>
+      <div id="phrase" hidden><div id="pcue"></div><div id="pcur"></div><div id="pnext"></div></div>
+      <div id="count" hidden></div>
+    </div>
+  </div>
+</div>
+<script src="vendor/vosk.js"></script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const api = window.api;
+const PLATFORM = api.platform || 'win32';
+const MIC_HELP = PLATFORM === 'darwin' ? 'Microphone blocked. Allow Eyeline in System Settings › Privacy & Security › Microphone.'
+  : PLATFORM === 'linux' ? 'Microphone blocked or missing. Check your sound settings, or switch to Auto.'
+  : 'Microphone blocked. Allow it in Windows Settings › Privacy › Microphone.';
+// Shortcut labels: ⌘ on a Mac, Ctrl elsewhere
+if (PLATFORM === 'darwin') {
+  document.querySelectorAll('kbd').forEach(k => k.textContent = k.textContent.replace(/Ctrl/g, '⌘'));
+  document.querySelectorAll('[title]').forEach(el => el.title = el.title.replace(/Ctrl\+Shift\+/g, '⌘⇧'));
+}
+let S = {drive:'voice', mode:'scroll', lang:'en-us', lockScript:true, wpm:140, size:32, width:760, lines:3, plen:4, bg:90, clickThrough:true, shadow:true, compact:false, textFirst:false};
+let scriptText = '';
+
+/* ---------- script model ---------- */
+function normWord(t){ return t.toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{M}\p{N}]+/gu, ''); }
+function tokenize(text){
+  const out = []; let inCue = false;
+  text.replace(/\r/g,'').split(/\n\s*\n+/).forEach((p, pi) => {
+    p.trim().split(/\s+/).filter(Boolean).forEach(t => {
+      const cue = inCue || t.includes('[');
+      if (t.includes('[') && !t.includes(']')) inCue = true;
+      if (t.includes(']')) inCue = false;
+      out.push({t, norm: cue ? '' : normWord(t), cue, para: pi});
+    });
+  });
+  return out;
+}
+let words = [], n = 0, sIdx = [], sb = [], chunks = [], chunkOf = [], grammarStr = '[]';
+let pos = 0, nowIdx = -1;
+function buildModel(){
+  words = tokenize(scriptText || ''); n = words.length;
+  sIdx = []; sb = new Array(n + 1);
+  for (let i = 0; i < n; i++){ sb[i] = sIdx.length; if (words[i].norm) sIdx.push(i); }
+  sb[n] = sIdx.length;
+  const g = new Set();
+  words.forEach(w => { if (w.norm){ const v = w.t.toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{M}\p{N}']/gu, '').replace(/^'+|'+$/g, ''); if (v) g.add(v); } });
+  grammarStr = JSON.stringify([...g, '[unk]']);
+  buildChunks();
+}
+function buildChunks(){
+  chunks = []; chunkOf = new Array(n).fill(0);
+  let cur = null, cues = [];
+  const close = () => { if (cur && cur.words.length) chunks.push(cur); cur = null; };
+  for (let i = 0; i < n; i++){
+    const w = words[i];
+    if (w.cue){ close(); cues.push(i); continue; }
+    if (cur && words[cur.words[cur.words.length - 1]].para !== w.para) close();
+    if (!cur){ cur = {start: cues.length ? cues[0] : i, cue: cues, words: []}; cues = []; }
+    cur.words.push(i);
+    const sentence = /[.!?…]["”’)]*$/.test(w.t), clause = /[,;:—–]["”’)]*$/.test(w.t);
+    if (cur.words.length >= S.plen || sentence || (clause && cur.words.length >= 2)) close();
+  }
+  close();
+  if (cues.length) chunks.push({start: cues[0], cue: cues, words: []});
+  chunks.forEach((c, k) => { c.cue.forEach(i => chunkOf[i] = k); c.words.forEach(i => chunkOf[i] = k); });
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = sec => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); };
+
+/* ---------- layout ---------- */
+const box = $('box'), panel = $('panel'), view = $('view'), track = $('track'), phraseEl = $('phrase'), pcue = $('pcue'), pcur = $('pcur'), pnext = $('pnext');
+let wordEls = [], tops = [], lineH = 44, focusY = 22, y = 0, glide = true, readRow = 1;
+let running = false, elapsed = 0, phraseT = 0, lastT = 0;
+
+function renderTrack(){
+  let html = '', lastPara = -1;
+  words.forEach((w, i) => {
+    if (w.para !== lastPara){ if (lastPara >= 0) html += '</p>'; html += '<p>'; lastPara = w.para; } else html += ' ';
+    html += `<span data-i="${i}"${w.cue ? ' class="cue"' : ''}>${esc(w.t)}</span>`;
+  });
+  if (n) html += '</p>';
+  track.innerHTML = html;
+  wordEls = Array.from(track.querySelectorAll('span'));
+}
+function layout(){
+  document.documentElement.style.setProperty('--bgA', (S.bg / 100).toFixed(2));
+  panel.classList.toggle('clear', S.bg < 10);
+  document.body.classList.toggle('shadow', S.shadow !== false && S.bg < 60);
+  box.classList.toggle('compact', !!S.compact);
+  box.classList.toggle('textFirst', !!S.textFirst);
+  const isPhrase = S.mode === 'phrase';
+  lineH = S.size * 1.38;
+  readRow = S.lines >= 5 ? 1 : 0; // current line on top; one line of context above when the panel is tall
+  track.style.fontSize = S.size + 'px';
+  view.style.fontSize = S.size + 'px';
+  view.style.height = (S.lines * lineH) + 'px';
+  view.style.setProperty('--row0', (readRow * lineH) + 'px');
+  view.className = readRow ? 'fade' : 'fade0';
+  view.hidden = isPhrase; phraseEl.hidden = !isPhrase;
+  phraseEl.style.fontSize = Math.round(S.size * 1.05) + 'px';
+  phraseEl.style.height = (S.lines * lineH) + 'px';
+  focusY = readRow * lineH + lineH / 2;
+  tops = wordEls.map(e => e.offsetTop);
+  if (isPhrase) renderPhrase(); else { y = yForPos(pos); applyY(); }
+  updateUi();
+  queueFit();
+}
+function lineTop(i){ return tops[i] - (tops[0] || 0); }
+function yForPos(p){
+  if (!n) return 0;
+  const top = p >= n ? lineTop(n-1) + lineH : lineTop(Math.max(0, p));
+  return focusY - (top + lineH / 2);
+}
+const yMax = () => focusY - lineH / 2;
+const yMin = () => n ? focusY - (lineTop(n-1) + lineH) : 0;
+function applyY(){ track.style.transform = `translateY(${y.toFixed(1)}px)`; }
+function posFromY(){
+  const F = focusY - y - lineH * 0.5;
+  let lo = 0, hi = n;
+  while (lo < hi){ const m = (lo + hi) >> 1; if (lineTop(m) + lineH * 0.5 <= F) lo = m + 1; else hi = m; }
+  return lo;
+}
+function setPos(p){
+  p = Math.max(0, Math.min(n, p));
+  if (S.mode === 'scroll'){ const a = Math.min(p, pos), b = Math.max(p, pos); for (let i = a; i < b; i++) wordEls[i].classList.toggle('done', i < p); }
+  pos = p;
+  const ni = S.drive === 'voice' && sb[pos] < sIdx.length ? sIdx[sb[pos]] : -1;
+  if (ni !== nowIdx){
+    if (nowIdx >= 0 && wordEls[nowIdx]) wordEls[nowIdx].classList.remove('now');
+    nowIdx = ni;
+    if (nowIdx >= 0 && S.mode === 'scroll') wordEls[nowIdx].classList.add('now');
+  }
+  if (S.mode === 'phrase') renderPhrase();
+}
+function resetClasses(){ wordEls.forEach((e, i) => { e.classList.toggle('done', i < pos); e.classList.remove('now'); }); nowIdx = -1; setPos(pos); }
+function jumpTo(p){
+  setPos(p); phraseT = 0;
+  if (running && S.drive === 'auto' && S.mode === 'scroll'){ y = yForPos(pos); applyY(); } else glide = true;
+}
+function renderPhrase(){
+  if (!chunks.length){ pcur.textContent = ''; pnext.textContent = ''; pcue.hidden = true; return; }
+  const k = pos >= n ? chunks.length - 1 : chunkOf[pos], c = chunks[k], nx = chunks[k + 1];
+  pcue.hidden = !c.cue.length;
+  pcue.textContent = c.cue.map(i => words[i].t).join(' ').replace(/[\[\]]/g, '');
+  pcur.innerHTML = c.words.map(i => `<span class="${i < pos ? 'done' : ''}${i === nowIdx ? ' now' : ''}">${esc(words[i].t)}</span>`).join(' ');
+  pnext.textContent = pos >= n ? 'End of script' : (nx ? nx.words.map(i => words[i].t).join(' ') : 'End of script');
+}
+function chunkDur(c){
+  if (!c) return 1;
+  const last = c.words.length ? words[c.words[c.words.length - 1]].t : '';
+  return c.words.length * 60 / S.wpm + (/[.!?…]["”’)]*$/.test(last) ? 0.45 : /[,;:—–]["”’)]*$/.test(last) ? 0.2 : 0) + (c.cue.length ? 0.9 : 0);
+}
+function lineStep(d){
+  if (!n) return;
+  if (S.mode === 'phrase'){
+    const k = pos >= n ? chunks.length : chunkOf[pos];
+    jumpTo(chunks[Math.max(0, Math.min(chunks.length - 1, k + d))].start); return;
+  }
+  if (running && S.drive === 'auto'){ y = Math.max(yMin(), Math.min(yMax(), y - d * lineH)); applyY(); setPos(posFromY()); return; }
+  const p = Math.min(pos, n - 1), top = tops[p];
+  if (d > 0){ let i = p; while (i < n && tops[i] <= top + 1) i++; jumpTo(i); }
+  else {
+    let i = p; while (i > 0 && tops[i-1] >= top - 1) i--;
+    let j = i - 1; if (j < 0){ jumpTo(0); return; }
+    const pt = tops[j]; while (j > 0 && tops[j-1] >= pt - 1) j--; jumpTo(j);
+  }
+}
+
+/* ---------- loop ---------- */
+let tick = 0, level = 0;
+const meterBars = Array.from(document.querySelectorAll('#meter i'));
+function frame(t){
+  const dt = Math.min(0.1, (t - (lastT || t)) / 1000); lastT = t;
+  if (S.mode === 'scroll' && n){
+    if (running && S.drive === 'auto'){
+      const total = lineTop(n-1) + lineH;
+      y -= (S.wpm / 60) * (total / Math.max(1, sIdx.length)) * dt;
+      if (y <= yMin()){ y = yMin(); setPos(n); pause(); message('End of script'); }
+      const np = posFromY(); if (np !== pos) setPos(np);
+      applyY();
+    } else if (glide){
+      const ty = yForPos(pos); y += (ty - y) * Math.min(1, dt * 9);
+      if (Math.abs(ty - y) < 0.3){ y = ty; glide = false; }
+      applyY();
+    }
+  } else if (S.mode === 'phrase' && running && S.drive === 'auto' && chunks.length){
+    const k = pos >= n ? chunks.length - 1 : chunkOf[pos];
+    phraseT += dt;
+    if (phraseT >= chunkDur(chunks[k])){ phraseT = 0; if (k + 1 < chunks.length) setPos(chunks[k + 1].start); else { setPos(n); pause(); message('End of script'); } }
+  }
+  // mic level meter
+  const live = running && voiceOn;
+  level *= Math.pow(0.02, dt);
+  const shape = [0.55, 1, 0.8, 0.45];
+  meterBars.forEach((b, i) => { b.style.height = (4 + (live ? Math.min(1, level * 9) * 16 * shape[i] : 0)) + 'px'; });
+  if (running) elapsed += dt;
+  if ((tick += dt) > 0.25){ tick = 0; report(); }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- heard bar ---------- */
+const chipsEl = $('chips');
+let heardFinal = [], heardPartial = [], chipsQueued = false, msgChip = null;
+function showHeard(){
+  if (chipsQueued) return; chipsQueued = true;
+  requestAnimationFrame(() => {
+    chipsQueued = false;
+    chipsEl.innerHTML = '';
+    if (msgChip){ const c = document.createElement('span'); c.className = 'chip ' + (msgChip.err ? 'warn' : 'dim'); c.textContent = msgChip.text; chipsEl.appendChild(c); return; }
+    const all = heardFinal.concat(heardPartial).slice(-18);
+    if (!all.length){ const c = document.createElement('span'); c.className = 'chip dim'; c.textContent = S.drive === 'voice' ? (running ? 'Listening…' : 'Words you say appear here') : `Auto-scroll at ${S.wpm} words a minute`; chipsEl.appendChild(c); return; }
+    for (let i = 0; i < all.length; i += 3){ const c = document.createElement('span'); c.className = 'chip'; c.textContent = all.slice(i, i + 3).join(' '); chipsEl.appendChild(c); }
+    while (chipsEl.scrollWidth > chipsEl.clientWidth + 1 && chipsEl.children.length > 1) chipsEl.removeChild(chipsEl.firstChild);
+  });
+}
+const heardWords = txt => (txt || '').split(/\s+/).filter(w => w && w !== '[unk]');
+
+/* ---------- voice follow (offline, Vosk) ---------- */
+let model = null, modelLang = null, recog = null, recogKey = '', actx = null, stream = null, proc = null, voiceOn = false, lastTail = '';
+function lev(a, b){
+  let prev = Array.from({length: b.length + 1}, (_, j) => j);
+  for (let i = 1; i <= a.length; i++){ const cur = [i]; for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1)); prev = cur; }
+  return prev[b.length];
+}
+function sim(a, b){
+  if (!a || !b) return 0; if (a === b) return 1;
+  const la = a.length, lb = b.length;
+  if (Math.min(la, lb) >= 3 && (a.startsWith(b) || b.startsWith(a))) return 0.8;
+  if (Math.min(la, lb) >= 4 && Math.abs(la - lb) <= 2 && lev(a, b) <= (Math.max(la, lb) >= 7 ? 2 : 1)) return 0.7;
+  return 0;
+}
+function matchSpeech(tail, p, N){
+  let best = -1, bs = 0; const last = tail[tail.length - 1];
+  for (let j = Math.max(0, p - 1); j < Math.min(N, p + 30); j++){
+    if (!sim(last, words[sIdx[j]].norm)) continue;
+    let s = 0;
+    for (let k = 0; k < tail.length; k++){ const sj = j - k; if (sj < 0) break; s += sim(tail[tail.length - 1 - k], words[sIdx[sj]].norm) * (k === 0 ? 1 : 0.75); }
+    s -= 0.025 * Math.max(0, j - p);
+    if (s >= (j <= p + 2 ? 0.7 : 1.5) && s > bs){ bs = s; best = j; }
+  }
+  return best;
+}
+function handleSpeech(txt){
+  if (!running || S.drive !== 'voice') return;
+  const sp = (txt || '').split(/\s+/).map(normWord).filter(w => w && w !== 'unk');
+  if (!sp.length) return;
+  const tail = sp.slice(-4), key = tail.join(' ');
+  if (key === lastTail) return; lastTail = key;
+  const p = sb[pos], N = sIdx.length, best = matchSpeech(tail, p, N);
+  if (best >= 0 && best + 1 > p){
+    jumpTo(best + 1 < N ? sIdx[best + 1] : n);
+    if (sb[pos] >= N){ setPos(n); setTimeout(() => { if (running){ pause(); message('End of script'); } }, 900); }
+  }
+}
+let modelLoading = null;
+function ensureModel(){
+  if (model && modelLang === S.lang) return Promise.resolve();
+  if (modelLoading && modelLoading.lang === S.lang) return modelLoading.p;
+  const lang = S.lang;
+  const p = (async () => {
+    message('Loading voice model…');
+    const url = await api.invoke('model-ensure', lang);
+    if (model){ try{ model.terminate(); }catch(e){} model = null; recog = null; recogKey = ''; }
+    model = await Vosk.createModel(url);
+    modelLang = lang;
+  })().finally(() => { if (modelLoading && modelLoading.p === p) modelLoading = null; });
+  modelLoading = {lang, p};
+  return p;
+}
+function makeRecognizer(){
+  const key = S.lang + '|' + (S.lockScript ? grammarStr : '');
+  if (recog && recogKey === key) return;
+  if (recog){ try{ recog.remove(); }catch(e){} }
+  recog = S.lockScript ? new model.KaldiRecognizer(actx.sampleRate, grammarStr) : new model.KaldiRecognizer(actx.sampleRate);
+  recog.on('partialresult', m => { if (!running) return; heardPartial = heardWords(m.result.partial); showHeard(); handleSpeech(m.result.partial); });
+  recog.on('result', m => { if (!running) return; heardFinal = heardFinal.concat(heardWords(m.result.text)).slice(-30); heardPartial = []; showHeard(); handleSpeech(m.result.text); lastTail = ''; });
+  recogKey = key;
+}
+async function startVoice(){
+  try{
+    await ensureModel();
+    if (!stream && !(await api.invoke('mic-access'))) throw Object.assign(new Error('mic denied'), {name: 'NotAllowedError'});
+    if (!stream) stream = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1}});
+    if (!actx) actx = new AudioContext();
+    await actx.resume();
+    makeRecognizer();
+    if (!proc){
+      const src = actx.createMediaStreamSource(stream);
+      proc = actx.createScriptProcessor(4096, 1, 1);
+      proc.onaudioprocess = e => {
+        if (!(voiceOn && recog)) return;
+        const d = e.inputBuffer.getChannelData(0); let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] * d[i];
+        level = Math.max(level, Math.sqrt(s / (d.length / 4)));
+        try{ recog.acceptWaveform(e.inputBuffer); }catch(_){}
+      };
+      src.connect(proc); proc.connect(actx.destination);
+    }
+    voiceOn = true; lastTail = '';
+    if (running) message(null);
+    updateUi();
+  }catch(e){
+    voiceOn = false; running = false; updateUi();
+    const name = e && e.name;
+    if (name === 'NotAllowedError') message(MIC_HELP, true);
+    else if (name === 'NotFoundError') message('No microphone found. Plug one in, or switch to Auto.', true);
+    else if (/download|fetch|HTTP|network/i.test(String(e && e.message))) message('Couldn’t download that voice model. Check your internet, or use English (US), which is built in.', true);
+    else message('Voice follow couldn’t start: ' + (e && e.message || e), true);
+  }
+}
+function stopVoice(){ voiceOn = false; if (recog){ try{ recog.retrieveFinalResult(); }catch(e){} } }
+
+/* ---------- run control ---------- */
+let countTimer = 0;
+function play(){
+  if (!n || running) return;
+  if (pos >= n){ pos = 0; elapsed = 0; resetClasses(); if (S.mode === 'scroll'){ y = yForPos(0); applyY(); } }
+  clearInterval(countTimer);
+  const c = $('count'); let k = 3; c.textContent = k; c.hidden = false; view.style.visibility = 'hidden'; phraseEl.style.visibility = 'hidden';
+  heardFinal = []; heardPartial = []; message(null);
+  if (S.drive === 'voice') ensureModel().catch(() => {});
+  countTimer = setInterval(() => {
+    if (--k > 0){ c.textContent = k; return; }
+    clearInterval(countTimer); c.hidden = true; view.style.visibility = ''; phraseEl.style.visibility = '';
+    running = true; glide = S.drive !== 'auto'; phraseT = 0;
+    if (S.drive === 'voice') startVoice(); else message(null);
+    updateUi();
+  }, 600);
+  updateUi();
+}
+function pause(){
+  clearInterval(countTimer); $('count').hidden = true; view.style.visibility = ''; phraseEl.style.visibility = '';
+  running = false; stopVoice(); updateUi();
+}
+const counting = () => !$('count').hidden;
+function toggle(){ (running || counting()) ? pause() : play(); }
+function restart(){ const was = running; pause(); pos = 0; elapsed = 0; resetClasses(); if (S.mode === 'scroll'){ y = yForPos(0); applyY(); } else renderPhrase(); heardFinal = []; heardPartial = []; message(null); if (was) play(); }
+
+let msgText = 'Ready', msgErr = false;
+function message(t, err){
+  msgChip = t ? {text: t, err: !!err} : null;
+  msgText = t || (running ? (S.drive === 'voice' ? 'Listening' : 'Auto-scroll · ' + S.wpm + ' wpm') : 'Paused');
+  msgErr = !!err; showHeard(); report();
+}
+function updateUi(){
+  document.body.classList.toggle('paused', !running);
+  $('tPlay').textContent = running || counting() ? 'Pause' : (pos >= n && n ? 'Again' : 'Start');
+  $('icMic').classList.toggle('live', running && voiceOn);
+  $('meter').classList.toggle('on', running && voiceOn);
+  document.querySelectorAll('#segDrive button').forEach(b => b.classList.toggle('on', b.dataset.d === S.drive));
+  $('spd').hidden = S.drive !== 'auto';
+  $('wpm').textContent = S.wpm + ' wpm';
+  $('bExpand').title = S.lines >= 5 ? 'Show fewer lines' : 'Show more lines';
+  if (!msgChip) msgText = running ? (S.drive === 'voice' ? 'Listening' : 'Auto-scroll · ' + S.wpm + ' wpm') : (counting() ? 'Starting' : 'Paused');
+  showHeard(); report();
+}
+function report(){
+  const pct = sIdx.length ? Math.round(100 * sb[pos] / sIdx.length) : 0;
+  $('pinfo').textContent = `${pct}% · ${fmt(elapsed)}`;
+  api.send('status', {running, counting: counting(), drive: S.drive, listening: running && voiceOn, elapsed, progress: sIdx.length ? sb[pos] / sIdx.length : 0, message: msgText, error: msgErr});
+}
+
+/* ---------- wiring ---------- */
+function loadScript(text){
+  scriptText = text || ''; const keep = pos;
+  buildModel(); renderTrack(); pos = Math.min(keep, n); resetClasses(); layout();
+  recogKey = '';
+}
+function applySettings(ns){
+  const modeChanged = ns.mode !== S.mode || ns.plen !== S.plen, driveChanged = ns.drive !== S.drive;
+  const wasRunning = running;
+  if (driveChanged && running) pause();
+  S = {...S, ...ns};
+  if (modeChanged){ buildChunks(); resetClasses(); }
+  if (S.drive === 'voice' && model && voiceOn && actx) makeRecognizer();
+  layout();
+  if (driveChanged && wasRunning) play();
+}
+const setS = p => api.send('set-settings', p);
+api.on('init', d => { S = {...S, ...d.settings}; loadScript(d.script || ''); });
+api.on('script', t => loadScript(t));
+api.on('settings', s => applySettings(s));
+api.on('model-progress', m => { if (m.phase === 'download') message(`Downloading voice model · ${m.pct}%`); else if (m.phase === 'unpack') message('Preparing voice model…'); });
+api.on('cmd', c => {
+  if (c === 'toggle') toggle(); else if (c === 'play') play(); else if (c === 'pause') pause();
+  else if (c === 'restart') restart();
+  else if (c === 'forward') lineStep(1); else if (c === 'back') lineStep(-1);
+  else if (c === 'faster' || c === 'slower') setS({wpm: Math.max(60, Math.min(260, S.wpm + (c === 'faster' ? 10 : -10)))});
+});
+$('bPlay').onclick = toggle;
+$('bRestart').onclick = restart;
+$('bScript').onclick = () => api.send('cmd', 'focus-control');
+$('bMore').onclick = () => api.send('cmd', 'focus-control');
+$('bEnd').onclick = () => { pause(); api.send('cmd', 'hide'); };
+$('bCompact').onclick = () => setS({compact: !S.compact});
+$('bBack').onclick = () => lineStep(-1);
+$('bFwd').onclick = () => lineStep(1);
+$('bSmaller').onclick = () => setS({size: Math.max(20, S.size - 2)});
+$('bBigger').onclick = () => setS({size: Math.min(80, S.size + 2)});
+$('bExpand').onclick = () => setS({lines: S.lines >= 5 ? 3 : 6});
+$('bSlow').onclick = () => setS({wpm: Math.max(60, S.wpm - 10)});
+$('bFast').onclick = () => setS({wpm: Math.min(260, S.wpm + 10)});
+document.querySelectorAll('#segDrive button').forEach(b => b.onclick = () => setS({drive: b.dataset.d}));
+document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => b.blur()));
+// The bars stay clickable and the script text passes clicks through. The main process decides
+// which by checking the cursor against these rectangles, so report them whenever layout changes.
+let dragging = false;
+function sendHitRects(){
+  const rect = el => { const r = el.getBoundingClientRect(); return r.width && r.height ? {x: Math.floor(r.left) - 2, y: Math.floor(r.top) - 2, w: Math.ceil(r.width) + 4, h: Math.ceil(r.height) + 4} : null; };
+  const bars = Array.from(document.querySelectorAll('.hit')).map(rect).filter(Boolean);
+  api.send('hit-rects', {bars, panel: rect(panel)});
+}
+
+/* ---------- moving the overlay ----------
+   Drag the move button, or any empty part of the bars and the panel header.
+   The main process follows the real cursor, so the window tracks smoothly at any display scaling. */
+function isHandle(t){
+  if (!t || !t.closest) return false;
+  if (t.closest('#bMove')) return true;
+  if (t.closest('button, .seg, .spd')) return false;
+  return !!t.closest('#toolbar, #heard, #phead');
+}
+const dlog = m => api.send('log', m);
+document.addEventListener('pointerdown', e => dlog(`pointerdown btn=${e.button} target=${e.target.id || e.target.className || e.target.tagName} handle=${isHandle(e.target)}`), true);
+document.addEventListener('mouseover', e => { if (e.target.closest && e.target.closest('.hit') && !window.__hov){ window.__hov = 1; dlog('hover hit'); } });
+box.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || !isHandle(e.target)) return;
+  e.preventDefault();
+  dragging = true; document.body.classList.add('dragging');
+  try{ box.setPointerCapture(e.pointerId); }catch(_){}
+  api.send('drag-start');
+});
+function endDrag(e){
+  if (!dragging) return;
+  dragging = false; document.body.classList.remove('dragging');
+  api.send('drag-end', e ? e.type : 'none');
+}
+box.addEventListener('pointerup', endDrag);
+box.addEventListener('pointercancel', endDrag);
+box.addEventListener('lostpointercapture', endDrag);
+window.addEventListener('blur', () => dlog('window blur' + (dragging ? ' (while dragging)' : '')));
+function fit(){
+  sendHitRects();
+  api.send('overlay-fit', {needW: S.width + 40, needH: Math.ceil(box.getBoundingClientRect().bottom) + 26, innerW: window.innerWidth, innerH: window.innerHeight});
+}
+let fitQueued = false;
+function queueFit(){ if (fitQueued) return; fitQueued = true; requestAnimationFrame(() => { fitQueued = false; fit(); }); }
+new ResizeObserver(queueFit).observe(box);
+window.addEventListener('resize', queueFit);
+document.fonts.ready.then(() => { tops = wordEls.map(e => e.offsetTop); layout(); });
+requestAnimationFrame(frame);
+window.__eyeline = {get pos(){ return pos; }, get n(){ return n; }, get words(){ return words; }, matchSpeech, handleSpeech};
+})();
+</script>
+</body>
+</html>
