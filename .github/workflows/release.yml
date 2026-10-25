@@ -1,0 +1,70 @@
+name: Build and release
+
+# Push a tag like v1.0.1 to build Windows, macOS and Linux apps and publish them as a release.
+# You can also run it by hand from the Actions tab (it then rebuilds the release for the latest tag).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run fetch-model
+      - run: node scripts/package.js linux
+      - run: node scripts/package.js win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds-linux-windows
+          path: |
+            dist/Eyeline-Linux-x64.tar.gz
+            dist/Eyeline-Windows.zip
+            models/vosk-model-small-en-us-0.15.tar.gz
+
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run fetch-model
+      - run: node scripts/package.js mac
+      - uses: actions/upload-artifact@v4
+        with:
+          name: builds-mac
+          path: |
+            dist/Eyeline-Mac-AppleSilicon.zip
+            dist/Eyeline-Mac-Intel.zip
+
+  release:
+    needs: [build-linux-windows, build-mac]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - name: Publish the voice model (used by npm install)
+        run: |
+          if ! gh release view voice-models >/dev/null 2>&1; then
+            gh release create voice-models out/models/vosk-model-small-en-us-0.15.tar.gz --prerelease --title "Voice models" \
+              --notes "Voice model used by \`npm install\` and \`npm run fetch-model\`. The app downloads already include it. Vosk small English (US) model 0.15, Apache 2.0, from https://alphacephei.com/vosk/models, repacked as .tar.gz for vosk-browser."
+          fi
+      - name: Publish the app release
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then TAG="$(git describe --tags --abbrev=0 --match 'v*')"; fi
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          gh release create "$TAG" out/Eyeline-Windows.zip out/Eyeline-Mac-AppleSilicon.zip out/Eyeline-Mac-Intel.zip out/Eyeline-Linux-x64.tar.gz \
+            --title "Eyeline ${TAG#v}" --latest --notes-file .github/release-notes.md

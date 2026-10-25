@@ -39,6 +39,8 @@ async function build(t) {
   fs.copyFileSync(path.join(root, 'build/readme', t.readme), path.join(outDir, 'READ ME FIRST.txt'));
   if (t.platform === 'win32') execFileSync(process.execPath, [path.join(__dirname, 'set-exe-info.js'), path.join(outDir, 'Eyeline.exe'), path.join(root, 'build/icon.ico')], { stdio: 'inherit' });
   if (t.platform === 'linux') { const s = path.join(outDir, 'eyeline.sh'); fs.copyFileSync(path.join(root, 'build/eyeline.sh'), s); fs.chmodSync(s, 0o755); }
+  // On a Mac, ad-hoc sign the bundle so Apple Silicon will run it (elsewhere, users sign it once; see build/readme/mac.txt).
+  if (t.platform === 'darwin' && process.platform === 'darwin') execFileSync('codesign', ['--force', '--deep', '--sign', '-', path.join(outDir, 'Eyeline.app')], { stdio: 'inherit' });
 
   const archive = path.join(dist, t.archive);
   fs.rmSync(archive, { force: true });

@@ -118,7 +118,9 @@ npm run dist:linux   # Eyeline-Linux-x64.tar.gz
 npm run dist         # all of them
 ```
 
-All four builds can be made on Linux or macOS. The Mac builds come out unsigned. Signing them for distribution needs an Apple Developer ID and a Mac.
+All four builds can be made on Linux or macOS. Built on a Mac, the Mac apps are ad-hoc signed; anywhere else they come out unsigned. Notarizing them for distribution needs an Apple Developer ID.
+
+Releases are built by GitHub Actions: pushing a tag such as `v1.0.1` builds the four downloads on GitHub's Linux and Mac machines and publishes them as a release ([workflow](.github/workflows/release.yml)).
 
 ### Project layout
 
