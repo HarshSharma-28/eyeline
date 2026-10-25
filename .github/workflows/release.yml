@@ -21,15 +21,19 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - id: v
         run: |
           TAG="v$(node -p "require('./package.json').version")"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || ! gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "build=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "build=false" >> "$GITHUB_OUTPUT"; echo "Release $TAG already exists; nothing to build."
+          BUILD=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then BUILD=true
+          elif ! gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then BUILD=true
+          elif ! git merge-base --is-ancestor "$TAG" HEAD 2>/dev/null; then
+            BUILD=true; echo "Release $TAG points to a commit that is no longer on main (history was rewritten); rebuilding it."
+          else echo "Release $TAG already exists; nothing to build."
           fi
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
 
   build-linux-windows:
     needs: check
@@ -76,12 +80,16 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/download-artifact@v4
         with: { path: out, merge-multiple: true }
       - name: Collect files
         run: mkdir rel && find out -type f -exec mv {} rel/ \; && ls -la rel
       - name: Publish the voice model (used by npm install)
         run: |
+          if gh release view voice-models >/dev/null 2>&1 && ! git merge-base --is-ancestor voice-models HEAD 2>/dev/null; then
+            gh release delete voice-models --yes --cleanup-tag
+          fi
           if ! gh release view voice-models >/dev/null 2>&1; then
             gh release create voice-models rel/vosk-model-small-en-us-0.15.tar.gz --target "$GITHUB_SHA" --prerelease --title "Voice models" \
               --notes "Voice model used by \`npm install\` and \`npm run fetch-model\`. The app downloads already include it. Vosk small English (US) model 0.15, Apache 2.0, from https://alphacephei.com/vosk/models, repacked as .tar.gz for vosk-browser."
