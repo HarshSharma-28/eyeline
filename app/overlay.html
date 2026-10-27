@@ -128,14 +128,14 @@ body.shadow #track span.done,body.shadow #pcur span.done{text-shadow:0 1px 2px r
 <div id="box">
   <div id="toolbar" class="bar hit">
     <span class="shield" id="icShield" hidden title="Hidden from screen recording &amp; screen sharing"><svg viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
-    <button class="ico" id="bMic" type="button" title="Mute the microphone (your place is held)" aria-pressed="false"><svg viewBox="0 0 24 24" class="on-ic"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg viewBox="0 0 24 24" class="off"><path d="M3 3l18 18M9 9v2a3 3 0 0 0 5.1 2.1M15 9.3V6a3 3 0 0 0-5.7-1.3M19 11a7 7 0 0 1-1.2 3.9M5 11a7 7 0 0 0 10.8 5.9M12 18v3"/></svg><i class="badge"></i></button>
+    <button class="ico" id="bMic" type="button" title="Mute the mic (keeps your place)" aria-pressed="false"><svg viewBox="0 0 24 24" class="on-ic"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg viewBox="0 0 24 24" class="off"><path d="M3 3l18 18M9 9v2a3 3 0 0 0 5.1 2.1M15 9.3V6a3 3 0 0 0-5.7-1.3M19 11a7 7 0 0 1-1.2 3.9M5 11a7 7 0 0 0 10.8 5.9M12 18v3"/></svg><i class="badge"></i></button>
     <button class="key primary" id="bPlay" type="button" title="Start or pause (Ctrl+Shift+Space)"><span id="icPlay"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg></span><span id="tPlay">Start</span><kbd>Ctrl ⇧ Space</kbd></button>
     <button class="key" id="bRestart" type="button" title="Back to the start (Ctrl+Shift+R)"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="lbl">Restart</span><kbd>Ctrl ⇧ R</kbd></button>
     <button class="key" id="bScript" type="button" title="Open your script (Ctrl+Shift+E)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg><span class="lbl">Script</span><kbd>Ctrl ⇧ E</kbd></button>
     <span class="sep"></span>
     <span class="ico drag" id="bMove" title="Drag to move" role="button" aria-label="Drag to move the overlay"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></span>
     <button class="ico" id="bCompact" type="button" title="Compact view" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></button>
-    <button class="ico" id="bMore" type="button" title="More" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    <button class="ico" id="bMore" type="button" title="More options" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
     <button class="end" id="bEnd" type="button" title="Stop and hide (Ctrl+Shift+H)">End</button>
   </div>
 
@@ -376,7 +376,7 @@ function showHeard(){
     chipsEl.innerHTML = '';
     if (msgChip){ const c = document.createElement('span'); c.className = 'chip ' + (msgChip.err ? 'warn' : 'dim'); c.textContent = msgChip.text; chipsEl.appendChild(c); return; }
     const all = heardFinal.concat(heardPartial).slice(-18);
-    if (!all.length){ const c = document.createElement('span'); c.className = 'chip dim'; c.textContent = S.drive === 'voice' ? (running ? (muted ? 'Microphone muted · your place is held' : 'Listening…') : 'Words you say appear here') : `Auto-scroll at ${S.wpm} words a minute`; chipsEl.appendChild(c); return; }
+    if (!all.length){ const c = document.createElement('span'); c.className = 'chip dim'; c.textContent = S.drive === 'voice' ? (running ? (muted ? 'Mic muted. Your place is saved.' : 'Listening…') : 'Words you say appear here') : `Auto-scroll at ${S.wpm} words a minute`; chipsEl.appendChild(c); return; }
     for (let i = 0; i < all.length; i += 3){ const c = document.createElement('span'); c.className = 'chip'; c.textContent = all.slice(i, i + 3).join(' '); chipsEl.appendChild(c); }
     while (chipsEl.scrollWidth > chipsEl.clientWidth + 1 && chipsEl.children.length > 1) chipsEl.removeChild(chipsEl.firstChild);
   });
@@ -427,7 +427,7 @@ function ensureModel(){
   if (modelLoading && modelLoading.lang === S.lang) return modelLoading.p;
   const lang = S.lang;
   const p = (async () => {
-    message('Loading voice model…');
+    message('Starting voice follow…');
     const url = await api.invoke('model-ensure', lang);
     if (model){ try{ model.terminate(); }catch(e){} model = null; recog = null; recogKey = ''; }
     model = await Vosk.createModel(url);
@@ -472,8 +472,8 @@ async function startVoice(){
     const name = e && e.name;
     if (name === 'NotAllowedError') message(MIC_HELP, true);
     else if (name === 'NotFoundError') message('No microphone found. Plug one in, or switch to Auto.', true);
-    else if (/download|fetch|HTTP|network/i.test(String(e && e.message))) message('Couldn’t download that voice model. Check your internet, or use English (US), which is built in.', true);
-    else message('Voice follow couldn’t start: ' + (e && e.message || e), true);
+    else if (/download|fetch|HTTP|network/i.test(String(e && e.message))) message("Couldn't download that language. Check your internet, or switch to English (US), which is built in.", true);
+    else message("Voice follow couldn't start: " + (e && e.message || e), true);
   }
 }
 function stopVoice(){ voiceOn = false; if (recog){ try{ recog.retrieveFinalResult(); }catch(e){} } }
@@ -522,7 +522,7 @@ function updateUi(){
   mic.classList.toggle('live', running && voiceOn && !muted);
   mic.classList.toggle('muted', muted);
   mic.setAttribute('aria-pressed', String(muted));
-  mic.title = muted ? 'Unmute the microphone' : 'Mute the microphone (your place is held)';
+  mic.title = muted ? 'Unmute the mic' : 'Mute the mic (keeps your place)';
   $('meter').classList.toggle('on', running && voiceOn && !muted);
   $('bCompact').classList.toggle('on', !!S.compact); $('bCompact').setAttribute('aria-pressed', String(!!S.compact));
   $('bCompact').title = S.compact ? 'Show the full overlay' : 'Compact view';
@@ -563,7 +563,7 @@ const setS = p => api.send('set-settings', p);
 api.on('init', d => { S = {...S, ...d.settings}; loadScript(d.script || ''); });
 api.on('script', t => loadScript(t));
 api.on('settings', s => applySettings(s));
-api.on('model-progress', m => { if (m.phase === 'download') message(`Downloading voice model · ${m.pct}%`); else if (m.phase === 'unpack') message('Preparing voice model…'); });
+api.on('model-progress', m => { if (m.phase === 'download') message(`Downloading the language for voice follow · ${m.pct}%`); else if (m.phase === 'unpack') message('Setting up voice follow…'); });
 api.on('cmd', c => {
   if (c === 'toggle') toggle(); else if (c === 'play') play(); else if (c === 'pause') pause();
   else if (c === 'restart') restart();
@@ -576,7 +576,7 @@ $('bScript').onclick = () => api.send('cmd', 'focus-control');
 $('bMic').onclick = () => {
   muted = !muted;
   if (muted){ level = 0; heardPartial = []; }
-  message(muted ? 'Microphone muted. Your place is held.' : null);
+  message(muted ? 'Mic muted. Your place is saved.' : null);
   updateUi();
 };
 
@@ -584,8 +584,8 @@ $('bMic').onclick = () => {
 const menu = $('menu');
 function syncMenu(){
   const na = PLATFORM === 'linux', on = S.protect && !na;
-  const [head, body] = na ? ['Visible in recordings', 'Linux doesn’t let apps hide from screen capture.']
-    : on ? (PLATFORM === 'darwin' ? ['Partly hidden from recording', 'macOS only hides it from some apps.'] : ['Hidden from recording & sharing', 'Others can’t see Eyeline in your recordings or screen shares.'])
+  const [head, body] = na ? ['Visible in recordings', "Linux doesn't let apps hide from screen capture."]
+    : on ? (PLATFORM === 'darwin' ? ['Partly hidden from recording', 'macOS only hides it from some apps.'] : ['Hidden from recording & sharing', "Others can't see Eyeline in your recordings or screen shares."])
     : ['Visible in recordings', 'Turn on hiding in Settings › Privacy.'];
   $('mPrivHead').textContent = head; $('mPrivBody').textContent = body;
   $('mPriv').className = 'mstate ' + (on ? (PLATFORM === 'darwin' ? 'part' : 'safe') : 'off');

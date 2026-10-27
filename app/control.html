@@ -203,12 +203,12 @@ select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid v
   <symbol id="i-key" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
   <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
-  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
 </svg>
 
 <header class="top">
   <div class="brand"><span class="lens" aria-hidden="true"></span>Eyeline</div>
-  <span class="pill" id="ovPill" title="Whether the floating overlay is on your screen"><i class="d"></i><span id="ovTxt">Overlay hidden</span></span>
+  <span class="pill" id="ovPill" title="Shows whether the overlay is on your screen"><i class="d"></i><span id="ovTxt">Overlay hidden</span></span>
   <button class="pill" id="privPill" type="button" title="Hide from screen recording &amp; screen sharing"><svg class="i"><use href="#i-shield"/></svg><span id="privTxt">Hidden from recording &amp; sharing</span></button>
   <span class="spacer"></span>
   <button class="btn" id="bShow" type="button" title="Show or hide the floating overlay (Ctrl+Shift+H)"><svg class="i" id="bShowIc"><use href="#i-eye"/></svg><span id="bShowTxt">Show overlay</span></button>
@@ -224,7 +224,7 @@ select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid v
         <span class="meta"><span class="name" id="docName">Untitled script</span><span class="stats" id="stats">No words yet</span></span>
       </div>
       <div class="tools">
-        <button class="btn ghost sm" id="bUpload" type="button" title="Import a .txt or .docx file (Ctrl+O)"><svg class="i"><use href="#i-upload"/></svg>Import</button>
+        <button class="btn ghost sm" id="bUpload" type="button" title="Import a .txt, .docx or .md file (Ctrl+O)"><svg class="i"><use href="#i-upload"/></svg>Import</button>
         <button class="btn ghost sm" id="bPaste" type="button" title="Replace the script with what's on your clipboard"><svg class="i"><use href="#i-paste"/></svg>Paste</button>
         <span class="sep"></span>
         <button class="btn ghost sm danger" id="bClear" type="button" title="Clear the script (you can undo)"><svg class="i"><use href="#i-trash"/></svg>Clear</button>
@@ -246,7 +246,7 @@ select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid v
         <div class="more">New to Eyeline? <button class="link" id="dSample" type="button">Load the sample script</button></div>
       </div>
     </div>
-    <p class="hint"><svg class="i" style="width:14px;height:14px"><use href="#i-sparkle"/></svg>Text in square brackets, like <code>[pause]</code> or <code>[smile]</code>, shows as a cue and isn't spoken. Leave a blank line between paragraphs.</p>
+    <p class="hint"><svg class="i" style="width:14px;height:14px"><use href="#i-info"/></svg>Text in square brackets, like <code>[pause]</code> or <code>[smile]</code>, shows as a cue and isn't spoken. Leave a blank line between paragraphs.</p>
   </section>
 
   <aside class="rack" aria-label="Settings">
@@ -259,7 +259,7 @@ select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid v
         </div>
       </div>
       <div class="row" id="rLang">
-        <label class="lab" for="lang">Voice model <span class="badge" id="oLang"></span></label>
+        <label class="lab" for="lang">Language <span class="badge" id="oLang"></span></label>
         <select id="lang"></select>
         <p class="note" id="langNote"></p>
       </div>
@@ -285,9 +285,9 @@ select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid v
       <div class="row" id="rLines"><label class="lab" for="lines">Lines shown <output id="oLines"></output></label><input type="range" id="lines" min="1" max="8" step="1"></div>
       <div class="row" id="rPlen"><label class="lab" for="plen">Words per phrase <output id="oPlen"></output></label><input type="range" id="plen" min="2" max="8" step="1"></div>
       <div class="row"><label class="lab" for="bg">Background <output id="oBg"></output></label><input type="range" id="bg" min="0" max="95" step="5"></div>
-      <div class="row"><label class="sw"><span class="t"><b>Text shadow</b><small>A soft shadow behind the words. Helps most over bright windows or a clear background.</small></span><input type="checkbox" role="switch" id="shadow"></label></div>
+      <div class="row"><label class="sw"><span class="t"><b>Text shadow</b><small>Makes the words easier to read over bright windows or a see-through background.</small></span><input type="checkbox" role="switch" id="shadow"></label></div>
       <div class="row"><label class="sw"><span class="t"><b>Clicks pass through the text</b><small>Keep working in the app underneath. The control bars stay clickable.</small></span><input type="checkbox" role="switch" id="clickThrough"></label></div>
-      <div class="row"><label class="sw"><span class="t"><b>Compact view</b><small>Only the main bar and your script.</small></span><input type="checkbox" role="switch" id="compact"></label></div>
+      <div class="row"><label class="sw"><span class="t"><b>Compact view</b><small>Shows only the main bar and your script.</small></span><input type="checkbox" role="switch" id="compact"></label></div>
       <div class="row"><label class="sw"><span class="t"><b>Script above the controls</b><small>Puts the words closest to the webcam.</small></span><input type="checkbox" role="switch" id="textFirst"></label></div>
       <div class="row"><button class="btn sm" id="bReset" type="button" style="align-self:flex-start"><svg class="i"><use href="#i-target"/></svg>Move overlay under the camera</button></div>
     </div>
@@ -309,7 +309,7 @@ select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid v
           <kbd>Ctrl Shift ← →</kbd><span>Scroll speed</span>
           <kbd>Ctrl Shift R</kbd><span>Restart</span>
           <kbd>Ctrl Shift H</kbd><span>Show / hide overlay</span>
-          <kbd>Ctrl Shift L</kbd><span>Toggle click-through</span>
+          <kbd>Ctrl Shift L</kbd><span>Clicks pass through on / off</span>
           <kbd>Ctrl Shift E</kbd><span>Open this window</span>
         </div>
       </div>
@@ -325,7 +325,7 @@ select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid v
   <span class="mono" id="sPct">0%</span><span class="mono" id="sTime">0:00</span>
 </footer>
 
-<div class="dragging-over" id="dragOver" hidden><div><svg class="i"><use href="#i-upload"/></svg>Drop to import your script</div></div>
+<div class="dragging-over" id="dragOver" hidden><div><svg class="i"><use href="#i-upload"/></svg>Drop the file to open it</div></div>
 <div id="toasts" aria-live="polite"></div>
 
 <script src="vendor/mammoth.browser.min.js"></script>
@@ -339,11 +339,11 @@ If you've ever sat down on a Monday morning with no idea where to start, this vi
 
 [pause]
 
-It's simple. You don't need a fancy app, and you don't need to be a morning person. All you need is a notebook, a calendar, and a little honesty about how much time you really have.
+You don't need a fancy app for this, and you don't have to be a morning person. I use a paper notebook and the calendar on my phone, and I try to be honest about how much time I actually have.
 
-Here's what we'll cover. First, how to get everything out of your head and onto paper. Second, how to pick the three things that actually matter this week. And third, how to protect time for them before everyone else claims it.
+We'll start by getting everything out of your head and onto paper. Then you'll pick the three things that matter most this week and block out time for them before meetings and errands fill it up.
 
-[look at camera] By the end of this video you'll have a plan you can start using tonight. So grab a pen, and let's get into it.`;
+[look at camera] You can do your first one tonight. Grab a pen and let's start.`;
 const MAX_BYTES = 10 * 1024 * 1024;
 const PLATFORM = api.platform || 'win32';
 const MOD = PLATFORM === 'darwin' ? '⌘' : 'Ctrl';
@@ -411,17 +411,17 @@ async function readFile(f){
   if (!f) return;
   const ext = (f.name.match(/\.([^.]+)$/) || [, ''])[1].toLowerCase();
   if (f.size > MAX_BYTES) return toast(`${f.name} is ${(f.size / 1048576).toFixed(1)} MB. Eyeline imports files up to 10 MB.`, { error: true });
-  if (ext === 'doc') return toast('That’s an older .doc file. In Word, choose File › Save As › Word Document (.docx), then import that.', { error: true, ms: 9000 });
-  if (ext === 'pdf' || ext === 'pages' || ext === 'rtf') return toast(`Eyeline can’t read .${ext} files yet. Copy the text and click Paste, or save it as .txt or .docx.`, { error: true, ms: 9000 });
+  if (ext === 'doc') return toast("That's an older .doc file. In Word, choose File › Save As › Word Document (.docx), then import that.", { error: true, ms: 9000 });
+  if (ext === 'pdf' || ext === 'pages' || ext === 'rtf') return toast(`Eyeline can't read .${ext} files yet. Copy the text and click Paste, or save it as .txt or .docx.`, { error: true, ms: 9000 });
   try{
     let text;
     if (ext === 'docx') text = (await window.mammoth.extractRawText({arrayBuffer: await f.arrayBuffer()})).value;
     else if (['txt','md','text'].includes(ext) || (f.type || '').startsWith('text/')) text = await f.text();
-    else return toast(`Eyeline reads .txt, .docx and .md files. “${f.name}” isn’t one of those.`, { error: true });
+    else return toast(`Eyeline reads .txt, .docx and .md files. "${f.name}" isn't one of those.`, { error: true });
     text = text.replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim();
     if (!text) return toast(`${f.name} has no text in it.`, { error: true });
     replaceWithUndo(text, f.name, `Imported ${f.name} · ${wordCount(text)} words`);
-  }catch(e){ toast(`Couldn’t read ${f.name}. Try saving it again as .txt or .docx, or paste the text in.`, { error: true }); }
+  }catch(e){ toast(`Couldn't read ${f.name}. Try saving it again as .txt or .docx, or paste the text in.`, { error: true }); }
 }
 const choose = () => $('file').click();
 $('bUpload').onclick = choose; $('dChoose').onclick = choose;
@@ -451,15 +451,15 @@ function fillLang(){
   for (const [k, m] of Object.entries(models)){ const o = document.createElement('option'); o.value = k; o.textContent = m.label; sel.appendChild(o); }
   sel.value = S.lang;
   const m = models[S.lang], ready = m && m.ready;
-  $('oLang').textContent = ready ? 'Ready' : 'Not downloaded'; $('oLang').className = 'badge' + (ready ? ' ok' : '');
-  $('langNote').textContent = ready ? 'Runs on this computer. Nothing you say leaves it.' : 'Downloads once (35–45 MB) the first time you press Start, then works offline.';
+  $('oLang').textContent = ready ? 'Ready' : 'Needs download'; $('oLang').className = 'badge' + (ready ? ' ok' : '');
+  $('langNote').textContent = ready ? 'Runs on this computer. Nothing you say leaves it.' : 'Downloads once (35 to 45 MB) the first time you press Start. After that it works offline.';
 }
 const PROTECT = {
-  win32: { on: ['Hidden', 'Recordings, screenshots and shares (OBS, Zoom, Teams, Meet, Snipping Tool) won’t show Eyeline. The taskbar icon still shows in a whole-screen share.'],
+  win32: { on: ['Hidden', "Recordings, screenshots and shares (OBS, Zoom, Teams, Meet, Snipping Tool) won't show Eyeline. The taskbar icon still shows in a whole-screen share."],
            off: ['Visible in recordings', 'Anyone watching your screen share or recording can see your script.'] },
   darwin: { on: ['Partly hidden', 'Hidden from Google Meet in Chrome. On macOS 15 and later, Zoom, Teams, QuickTime and screenshots can still capture it. Share a single window to keep it out.'],
             off: ['Visible in recordings', 'Anyone watching your screen share or recording can see your script.'] },
-  linux: { na: ['Not available on Linux', 'Linux doesn’t let apps hide from screen capture. Share or record a single window instead of your whole screen.'] }
+  linux: { na: ['Not available on Linux', "Linux doesn't let apps hide from screen capture. Share or record a single window instead of your whole screen."] }
 }[PLATFORM] || {};
 function syncPrivacy(){
   const na = PLATFORM === 'linux';
@@ -472,7 +472,7 @@ function syncPrivacy(){
   const pill = $('privPill');
   pill.className = 'pill ' + (na ? 'na' : S.protect ? (PLATFORM === 'darwin' ? 'exposed' : 'safe') : 'exposed');
   pill.querySelector('use').setAttribute('href', S.protect && !na ? '#i-shield' : '#i-shield-off');
-  $('privTxt').textContent = na ? 'Can’t hide on Linux' : S.protect ? (PLATFORM === 'darwin' ? 'Partly hidden from recording' : 'Hidden from recording & sharing') : 'Visible in recording & sharing';
+  $('privTxt').textContent = na ? "Can't hide on Linux" : S.protect ? (PLATFORM === 'darwin' ? 'Partly hidden from recording' : 'Hidden from recording & sharing') : 'Visible in recording & sharing';
   pill.disabled = na;
   pill.title = na ? PROTECT.na[1] : (S.protect ? 'Click to show Eyeline in recordings and screen shares' : 'Click to hide Eyeline from screen recording and screen sharing');
 }
@@ -524,7 +524,7 @@ api.on('overlay-visible', v => {
 api.on('settings', s => { S = s; sync(); });
 api.on('models', m => { models = m; fillLang(); });
 api.on('need-script', () => { needScript(); });
-api.on('model-progress', m => { if (m.phase === 'download') setMsg(`Downloading ${models[m.lang]?.label || ''} voice model · ${m.pct}%`); else if (m.phase === 'unpack') setMsg('Preparing voice model…'); });
+api.on('model-progress', m => { if (m.phase === 'download') setMsg(`Downloading ${models[m.lang]?.label || 'the language'} for voice follow · ${m.pct}%`); else if (m.phase === 'unpack') setMsg('Setting up voice follow…'); });
 function setMsg(t, err){ const el = $('sMsg'); el.textContent = t; el.className = err ? 'err' : ''; }
 api.on('status', s => {
   running = s.running || s.counting; progress = s.progress;
