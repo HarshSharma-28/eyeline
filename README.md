@@ -44,16 +44,18 @@ The first part removes the "downloaded from the internet" flag. The second signs
   <img src="docs/overlay.png" alt="The overlay over a video-planning app: control bar, transcript bar and a three-line script panel" width="900">
 </p>
 
-The overlay floats above every app in three pieces. The top bar holds the controls, each labelled with its shortcut. The bar under it shows the words Eyeline just heard, so you can tell at a glance that it's keeping up. Your script sits in the panel below.
+The overlay floats above every app in three pieces. The top bar holds the controls, each labelled with its shortcut. The bar under it shows the words Eyeline just heard, so you can tell at a glance that it's keeping up. Your script sits in the panel below. On a narrow overlay the top bar drops the shortcut labels first, so it never spills past the script.
 
 - Voice follow moves the script to the word you're on as you say it. Spoken words fade and the next one is underlined. It holds still while you pause or ad-lib, and jumps ahead if you skip a sentence.
 - Auto-scroll runs at a steady words-per-minute speed for when you'd rather not use the microphone.
 - Moving lines shows a few short lines that slide up. One phrase shows only the next few words, which keeps eye movement to a minimum.
 - Clicks on the script text pass through to the app underneath, so you can keep working in your slides or recorder. The bars stay clickable.
 - Drag the overlay anywhere by its move button or the empty parts of its bars. It reopens where you left it.
-- Hide from screen recordings keeps Eyeline out of screen shares and recordings while you still see it. How well that works depends on the operating system, as the next section explains.
+- Hide from screen recording & screen sharing keeps Eyeline out of recordings, screenshots and screen shares while you still see it. A green badge in the main window and a shield on the overlay tell you it's on, and clicking the badge turns it off or on. How well it works depends on the operating system, as the next section explains.
 - Cues in square brackets, like `[pause]` or `[smile]`, show up in blue and aren't expected to be spoken.
-- Paste a script or upload a `.txt` or `.docx` file. Edits in the main window reach the overlay as you type.
+- Drop a `.txt`, `.docx` or `.md` file anywhere on the main window, pick one with Import, paste from the clipboard, or type. If a file can't be read, Eyeline says why and what to do instead. Edits reach the overlay as you type.
+- Clear, Import and Reset settings never ask "are you sure?". Each one shows an Undo button for a few seconds instead.
+- The microphone button on the overlay mutes voice follow and holds your place until you unmute. The ⋮ button opens a menu with the hiding status, Settings, Move under the camera, and Quit.
 - You can change the text size, line length, number of lines, words per phrase and background opacity (all the way to fully clear), and turn on a text shadow, a compact view, or script-above-controls so the words sit closest to the camera.
 - Global shortcuts work while you're in another app.
 - English (US accent) is built in. English (Indian accent) and Hindi download once, 35 to 45 MB each, the first time you pick them.
@@ -64,7 +66,7 @@ The overlay floats above every app in three pieces. The top bar holds the contro
 
 ## Hiding from screen recording and screen sharing
 
-With Hide from screen recordings switched on (the default), Eyeline asks the operating system to leave its windows out of screen capture. You still see them normally. How much the operating system honours that request varies a lot:
+With Hide from screen recording & screen sharing switched on (the default), Eyeline asks the operating system to leave its windows out of screen capture. You still see them normally. How much the operating system honours that request varies a lot:
 
 | | Result |
 |---|---|

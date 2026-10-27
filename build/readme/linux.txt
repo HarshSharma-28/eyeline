@@ -4,7 +4,7 @@ Eyeline for Linux (64-bit)
 1. Extract this folder somewhere permanent (for example ~/Apps/Eyeline).
 2. Start Eyeline with:   ./eyeline.sh
    (or double-click eyeline.sh and choose "Run" if your file manager offers it)
-3. Paste your script and press Start. Allow the microphone if your desktop asks.
+3. Drop your script file on the Eyeline window (or click Paste) and press Start. Allow the microphone if your desktop asks.
 
 Works on X11 and on Wayland desktops (it runs through XWayland so the overlay can
 stay on top and be moved). A compositor is needed for the see-through background;

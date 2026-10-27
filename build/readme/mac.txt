@@ -29,7 +29,7 @@ Shortcuts (work in any app)
   Cmd+Shift+L            turn click-through on / off
 
 Screen recording and screen sharing on a Mac
-  "Hide from screen recordings" hides Eyeline from Google Meet in Chrome.
+  "Hide from screen recording & screen sharing" hides Eyeline from Google Meet in Chrome.
   On macOS 15 (Sequoia) and later, Apple no longer lets apps hide from Zoom, Teams,
   QuickTime, screenshots or recent OBS. There is no setting that changes this.
   To keep Eyeline out of a recording or a call, share or record a single window

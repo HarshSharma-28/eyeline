@@ -5,11 +5,12 @@ Eyeline for Windows (64-bit)
 2. Double-click Eyeline.exe.
    Windows may show "Windows protected your PC" because the app isn't code-signed.
    Click "More info", then "Run anyway".
-3. Paste your script in the Eyeline window and press Start.
+3. Drop your script file on the Eyeline window (or click Paste) and press Start.
    If Windows asks for microphone access, allow it.
 
 The overlay floats at the top of your main screen, right under the webcam:
-  - Control bar: Start/Pause, Restart, Script, move, compact view, settings, End
+  - Control bar: hidden-from-recording shield, mic mute, Start/Pause, Restart,
+    Script, move, compact view, more (⋮), End
   - Transcript bar: the words Eyeline hears, plus Voice / Auto
   - Script panel: your words, moving up as you speak
 Drag it anywhere with the move button or the empty parts of its bars. Its position is remembered.
@@ -25,7 +26,7 @@ Shortcuts (work in any app):
   Ctrl+Shift+L           turn click-through on / off
 
 Screen recording and screen sharing
-  With "Hide from screen recordings" on (the default), both Eyeline windows are
+  With "Hide from screen recording & screen sharing" on (the default), both Eyeline windows are
   invisible to screen recordings, screenshots and screen sharing (OBS, Zoom, Teams,
   Google Meet, Snipping Tool, Xbox Game Bar). You still see them normally.
   The taskbar icon still shows in a whole-screen share.

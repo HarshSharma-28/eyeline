@@ -15,4 +15,4 @@ On a Mac, run this once in Terminal after moving Eyeline to Applications, becaus
 xattr -cr /Applications/Eyeline.app && codesign --force --deep --sign - /Applications/Eyeline.app
 ```
 
-Hiding from screen recordings works fully on Windows, only against Google Meet in Chrome on macOS 15 and later, and not at all on Linux. The [README](https://github.com/HarshSharma-28/eyeline#hiding-from-screen-recording-and-screen-sharing) explains why.
+Hide from screen recording & screen sharing works fully on Windows, only against Google Meet in Chrome on macOS 15 and later, and not at all on Linux. The [README](https://github.com/HarshSharma-28/eyeline#hiding-from-screen-recording-and-screen-sharing) explains why.
