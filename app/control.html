@@ -9,159 +9,324 @@
 @font-face{font-family:"Geist";font-weight:600;src:url(fonts/geist-latin-600-normal.woff2) format("woff2")}
 @font-face{font-family:"Geist Mono";font-weight:400;src:url(fonts/geist-mono-latin-400-normal.woff2) format("woff2")}
 @font-face{font-family:"Geist Mono";font-weight:500;src:url(fonts/geist-mono-latin-500-normal.woff2) format("woff2")}
-/* Layout: top toolbar (brand · overlay state · transport), then script pane | settings pane, status strip at the bottom. */
+/* Layout: top bar (brand · status pills · transport) / editor | settings / status bar.
+   Editor shows a drop zone until there is a script. Settings are grouped cards with switches. */
 :root{
-  --bg:#ffffff; --bg-2:#f7f7f8; --ink:#0b0b0d; --ink-2:#55555c; --ink-3:#8b8b94;
-  --line:#e9e9ed; --line-2:#d9d9df; --accent:#2b6ae6; --accent-soft:#eef3fd; --rec:#e5484d; --ok:#2f9e5b;
+  --bg:#ffffff; --bg-2:#f6f6f8; --bg-3:#eeeef1; --ink:#0b0b0d; --ink-2:#55555c; --ink-3:#8b8b94;
+  --line:#e8e8ec; --line-2:#d8d8de; --accent:#2b6ae6; --accent-ink:#ffffff; --accent-soft:#edf3fe;
+  --ok:#1f8f4e; --ok-soft:#e8f6ee; --warn:#b26a00; --warn-soft:#fdf3e2; --danger:#d93036; --danger-soft:#fdecec;
+  --rec:#e5484d; --shadow:0 1px 2px rgba(16,16,24,.06),0 4px 16px rgba(16,16,24,.06);
   --sans:"Geist","Segoe UI",system-ui,sans-serif; --mono:"Geist Mono",Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --bg:#0a0a0c; --bg-2:#111114; --ink:#f4f4f6; --ink-2:#a3a3ad; --ink-3:#71717b;
-    --line:#1f1f24; --line-2:#2d2d34; --accent:#6199f6; --accent-soft:#131c2c; --rec:#ef5b60; --ok:#46b979; color-scheme:dark; }
+  :root{ --bg:#0b0b0d; --bg-2:#121215; --bg-3:#19191d; --ink:#f3f3f5; --ink-2:#a6a6af; --ink-3:#74747e;
+    --line:#202026; --line-2:#2e2e35; --accent:#5c95f5; --accent-ink:#06101f; --accent-soft:#15203a;
+    --ok:#45c07a; --ok-soft:#10251a; --warn:#f0a534; --warn-soft:#2a1f0d; --danger:#f2555a; --danger-soft:#2c1213;
+    --rec:#ef5b60; --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35); color-scheme:dark; }
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+kbd{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink-3);border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--bg);white-space:nowrap}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.top{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line)}
+/* ---------- buttons ---------- */
+.btn{font:inherit;font-size:13px;font-weight:500;height:34px;padding:0 13px;border-radius:9px;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap;transition:background .12s,border-color .12s,color .12s,box-shadow .12s,transform .05s}
+.btn:hover{background:var(--bg-2);border-color:var(--ink-3)}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.btn[disabled]:hover{background:var(--bg);border-color:var(--line-2)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--bg-3);border-color:transparent}
+.btn.danger{color:var(--danger)}
+.btn.danger:hover{background:var(--danger-soft)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);min-width:128px;justify-content:center;font-weight:600}
+.btn.primary:hover{opacity:.9;background:var(--ink)}
+.btn.primary kbd{background:transparent;color:inherit;opacity:.6;border-color:currentColor}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.accent:hover{filter:brightness(1.06);background:var(--accent)}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px;border-radius:8px}
+.btn .dot{width:8px;height:8px;border-radius:50%;background:var(--rec)}
+.link{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------- top bar ---------- */
+.top{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;letter-spacing:-.01em;margin-right:6px}
-.lens{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center}
-.lens::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink)}
-.pill{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:3px 9px;border-radius:99px;border:1px solid var(--line-2);color:var(--ink-2);display:flex;align-items:center;gap:6px}
-.pill i{width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
-.pill.on i{background:var(--ok)}
+.lens{width:20px;height:20px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center}
+.lens::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent)}
+.pill{font-size:12px;font-weight:500;height:26px;padding:0 10px;border-radius:99px;border:1px solid var(--line-2);color:var(--ink-2);display:inline-flex;align-items:center;gap:6px;background:transparent;font-family:var(--sans)}
+.pill svg.i{width:14px;height:14px}
+.pill .d{width:6px;height:6px;border-radius:50%;background:var(--ink-3)}
+.pill.on .d{background:var(--ok)}
+button.pill{cursor:pointer}
+button.pill:hover{border-color:var(--ink-3)}
+.pill.safe{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:var(--ok-soft)}
+.pill.exposed{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent);background:var(--warn-soft)}
+.pill.na{color:var(--ink-3)}
 .spacer{flex:1}
-.btn{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line-2);background:var(--bg);color:var(--ink);height:32px;padding:0 14px;border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
-.btn:hover{background:var(--bg-2)}
-.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink);min-width:116px;justify-content:center}
-.btn.primary::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--rec)}
-.btn.primary:hover{opacity:.88}
-.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 330px}
-.sheet{display:flex;flex-direction:column;min-width:0;min-height:0}
-.tools{display:flex;align-items:center;gap:8px;padding:12px 18px}
-.stats{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
-textarea{flex:1;min-height:0;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;line-height:1.7;padding:4px 20px 20px;resize:none;outline:none}
+/* ---------- main area ---------- */
+.main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 372px}
+@media (max-width:900px){.main{grid-template-columns:1fr}.rack{border-left:0!important;border-top:1px solid var(--line)}}
+
+/* editor */
+.editor{display:flex;flex-direction:column;min-width:0;min-height:0;position:relative}
+.edhead{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.doc{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.doc .ic{width:30px;height:30px;border-radius:8px;background:var(--bg-3);display:grid;place-items:center;color:var(--ink-2);flex:none}
+.doc .meta{min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.doc .name{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.doc .stats{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.tools{display:flex;gap:4px;align-items:center}
+.sep{width:1px;height:20px;background:var(--line-2);margin:0 4px}
+.edbody{flex:1;min-height:0;position:relative}
+textarea{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;line-height:1.75;padding:18px 22px 24px;resize:none;outline:none}
 textarea::placeholder{color:var(--ink-3)}
-textarea.drop{background:var(--accent-soft)}
-.hint{margin:0;padding:10px 20px;font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line)}
-.hint code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);background:var(--bg-2);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.hint{margin:0;padding:9px 16px 9px 38px;position:relative;font-size:12.5px;line-height:1.6;color:var(--ink-3);border-top:1px solid var(--line)}
+.hint>.i{position:absolute;left:16px;top:12px}
+.hint code{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);background:var(--bg-3);border-radius:4px;padding:0 4px}
 
-.rack{border-left:1px solid var(--line);overflow-y:auto;min-height:0}
-.sec{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
-.sec h3{margin:0;font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
-.row{display:flex;flex-direction:column;gap:6px}
-.label{font-size:13px;font-weight:500;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.label output{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--ink-2);font-variant-numeric:tabular-nums}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;background:var(--bg-2);border:1px solid var(--line);border-radius:8px}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label{padding:6px;text-align:center;font-size:13px;color:var(--ink-2);cursor:pointer;border-radius:6px}
-.seg input:checked + label{background:var(--bg);color:var(--ink);font-weight:500;box-shadow:0 0 0 1px var(--line-2),0 1px 2px rgba(0,0,0,.06)}
-.seg input:focus-visible + label{outline:2px solid var(--accent)}
+/* drop zone (empty state) */
+.drop{position:absolute;inset:16px;border:1.5px dashed var(--line-2);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;background:var(--bg)}
+.drop .big{width:52px;height:52px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.drop .big svg.i{width:24px;height:24px}
+.drop h2{margin:4px 0 0;font-size:18px;font-weight:600;letter-spacing:-.015em}
+.drop p{margin:0;color:var(--ink-2);max-width:42ch}
+.drop .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.drop .types{font-size:12px;color:var(--ink-3);display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
+.drop .types span{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border-radius:5px;padding:0 5px;color:var(--ink-2)}
+.drop .more{font-size:13px;color:var(--ink-3)}
+
+/* whole-window drag target */
+.dragging-over{position:fixed;inset:10px;z-index:50;border:2px dashed var(--accent);border-radius:16px;background:color-mix(in srgb,var(--accent-soft) 88%,transparent);display:grid;place-items:center;pointer-events:none}
+.dragging-over div{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--accent);font-weight:600;font-size:16px}
+.dragging-over svg.i{width:30px;height:30px}
+
+/* ---------- settings rack ---------- */
+.rack{border-left:1px solid var(--line);overflow-y:auto;min-height:0;background:var(--bg-2);padding:14px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:12px}
+.card h3{margin:0;padding:12px 14px 4px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);display:flex;align-items:center;gap:7px}
+.card h3 svg.i{width:14px;height:14px}
+.row{padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.row + .row{border-top:1px solid var(--line)}
+.lab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;font-weight:500}
+.lab output,.lab .val{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .note{margin:0;font-size:12px;line-height:1.5;color:var(--ink-3)}
-input[type=range]{width:100%;accent-color:var(--accent);margin:0}
-select{font:inherit;font-size:13px;height:32px;padding:0 8px;border:1px solid var(--line-2);border-radius:8px;background:var(--bg);color:var(--ink)}
-.sw{display:flex;align-items:flex-start;gap:10px;font-size:13px;cursor:pointer}
-.sw input{accent-color:var(--accent);width:15px;height:15px;margin:2px 0 0;flex:none}
-.sw small{display:block;color:var(--ink-3);font-size:12px;line-height:1.45}
-.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px;color:var(--ink-2)}
-kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border-radius:4px;padding:1px 5px;color:var(--ink-2);background:var(--bg-2);white-space:nowrap}
+.badge{font-size:11px;font-weight:500;padding:1px 7px;border-radius:99px;border:1px solid var(--line-2);color:var(--ink-2);font-family:var(--sans)}
+.badge.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:var(--ok-soft)}
 
-.status{display:flex;align-items:center;gap:14px;padding:9px 18px;border-top:1px solid var(--line);background:var(--bg-2);font-size:12.5px;color:var(--ink-2)}
-.status .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
-.status .dot.live{background:var(--rec)}
-.status .dot.auto{background:var(--accent)}
-.status .err{color:var(--rec)}
-.bar{flex:0 0 160px;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+/* segmented */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:3px;background:var(--bg-3);border-radius:10px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:flex;align-items:center;justify-content:center;gap:7px;height:32px;font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;border-radius:8px;transition:background .12s,color .12s}
+.seg label:hover{color:var(--ink)}
+.seg input:checked + label{background:var(--bg);color:var(--ink);box-shadow:0 0 0 1px var(--line-2),0 1px 2px rgba(0,0,0,.08)}
+.seg input:focus-visible + label{outline:2px solid var(--accent);outline-offset:1px}
+
+/* switch rows */
+.sw{display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.sw .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sw .t b{font-weight:500;font-size:13px}
+.sw .t small{font-size:12px;color:var(--ink-3);line-height:1.45}
+.sw input{appearance:none;-webkit-appearance:none;flex:none;width:36px;height:21px;border-radius:99px;background:var(--line-2);position:relative;cursor:pointer;margin:1px 0 0;transition:background .15s}
+.sw input::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.sw input:checked{background:var(--accent)}
+.sw input:checked::after{transform:translateX(15px)}
+.sw input:disabled{opacity:.45;cursor:not-allowed}
+.sw.disabled{cursor:not-allowed}
+.sw input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* sliders */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;margin:0;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:99px;background:linear-gradient(to right,var(--accent) 0 var(--p,50%),var(--line-2) var(--p,50%) 100%)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:#fff;border:1px solid var(--line-2);box-shadow:0 1px 3px rgba(0,0,0,.25);margin-top:-6px}
+input[type=range]:hover::-webkit-slider-thumb{border-color:var(--accent)}
+select{font:inherit;font-size:13px;height:34px;padding:0 10px;border:1px solid var(--line-2);border-radius:9px;background:var(--bg);color:var(--ink);width:100%}
+
+/* privacy card */
+.privacy .state{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;font-size:12.5px;line-height:1.45}
+.privacy .state svg.i{width:18px;height:18px;margin-top:1px}
+.privacy .state.safe{background:var(--ok-soft);color:var(--ok)}
+.privacy .state.exposed{background:var(--warn-soft);color:var(--warn)}
+.privacy .state.na{background:var(--bg-3);color:var(--ink-2)}
+.privacy .state b{display:block;font-weight:600}
+.privacy .state span{color:var(--ink-2)}
+
+.keys{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;font-size:12.5px;color:var(--ink-2);align-items:center}
+.rackfoot{display:flex;justify-content:center;padding:2px 0 6px}
+
+/* ---------- status bar ---------- */
+.status{display:flex;align-items:center;gap:12px;padding:8px 16px;border-top:1px solid var(--line);background:var(--bg-2);font-size:12.5px;color:var(--ink-2)}
+.status .d{width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex:none}
+.status .d.live{background:var(--rec);box-shadow:0 0 0 3px color-mix(in srgb,var(--rec) 25%,transparent)}
+.status .d.auto{background:var(--accent)}
+.status .err{color:var(--danger)}
+.bar{flex:0 0 150px;height:4px;border-radius:2px;background:var(--line-2);overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
-@media (max-width:860px){.main{grid-template-columns:1fr}.rack{border-left:0;border-top:1px solid var(--line)}}
+
+/* ---------- toast ---------- */
+#toasts{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:12px;min-width:280px;max-width:min(560px,calc(100vw - 32px));padding:9px 10px 9px 14px;border-radius:12px;background:var(--ink);color:var(--bg);box-shadow:var(--shadow);font-size:13px;animation:tin .18s ease-out}
+.toast.err{background:var(--danger);color:#fff}
+.toast .msg{flex:1}
+.toast button{font:inherit;font-weight:600;font-size:12.5px;border:0;border-radius:7px;padding:5px 10px;cursor:pointer;background:color-mix(in srgb,var(--bg) 18%,transparent);color:inherit}
+.toast button.x{background:transparent;padding:4px;opacity:.7;display:grid;place-items:center}
+.toast button.x svg.i{width:14px;height:14px}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.toast{animation:none}.btn,.seg label,.sw input,.sw input::after{transition:none}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-restart" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M10.6 5.1A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.4 3.4M6.6 6.6A16.6 16.6 0 0 0 2 12s3.5 7 10 7a9.8 9.8 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></symbol>
+  <symbol id="i-paste" viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-shield-off" viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M12 14l4-4"/><path d="M3.3 17a9 9 0 1 1 17.4 0"/></symbol>
+  <symbol id="i-lines" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+  <symbol id="i-phrase" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="8" rx="2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 2l10 5-10 5L2 7z"/><path d="M2 12l10 5 10-5M2 17l10 5 10-5"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></symbol>
+</svg>
+
 <header class="top">
   <div class="brand"><span class="lens" aria-hidden="true"></span>Eyeline</div>
-  <span class="pill" id="ovPill"><i></i><span id="ovTxt">Overlay hidden</span></span>
+  <span class="pill" id="ovPill" title="Whether the floating overlay is on your screen"><i class="d"></i><span id="ovTxt">Overlay hidden</span></span>
+  <button class="pill" id="privPill" type="button" title="Hide from screen recording &amp; screen sharing"><svg class="i"><use href="#i-shield"/></svg><span id="privTxt">Hidden from recording &amp; sharing</span></button>
   <span class="spacer"></span>
-  <button class="btn" id="bShow" type="button">Show overlay</button>
-  <button class="btn" id="bRestart" type="button">Restart</button>
-  <button class="btn primary" id="bPlay" type="button">Start</button>
+  <button class="btn" id="bShow" type="button" title="Show or hide the floating overlay (Ctrl+Shift+H)"><svg class="i" id="bShowIc"><use href="#i-eye"/></svg><span id="bShowTxt">Show overlay</span></button>
+  <button class="btn" id="bRestart" type="button" title="Go back to the start of the script (Ctrl+Shift+R)"><svg class="i"><use href="#i-restart"/></svg>Restart</button>
+  <button class="btn primary" id="bPlay" type="button" title="Start or pause (Ctrl+Shift+Space)"><svg class="i" id="bPlayIc"><use href="#i-play"/></svg><span id="bPlayTxt">Start</span></button>
 </header>
 
 <div class="main">
-  <section class="sheet" aria-label="Script">
-    <div class="tools">
-      <button class="btn" id="bUpload" type="button">Upload .txt or .docx</button>
-      <input type="file" id="file" accept=".txt,.md,.docx,text/plain" hidden>
-      <button class="btn" id="bClear" type="button">Clear</button>
-      <span class="stats" id="stats"></span>
+  <section class="editor" aria-label="Script">
+    <div class="edhead">
+      <div class="doc">
+        <span class="ic"><svg class="i"><use href="#i-file"/></svg></span>
+        <span class="meta"><span class="name" id="docName">Untitled script</span><span class="stats" id="stats">No words yet</span></span>
+      </div>
+      <div class="tools">
+        <button class="btn ghost sm" id="bUpload" type="button" title="Import a .txt or .docx file (Ctrl+O)"><svg class="i"><use href="#i-upload"/></svg>Import</button>
+        <button class="btn ghost sm" id="bPaste" type="button" title="Replace the script with what's on your clipboard"><svg class="i"><use href="#i-paste"/></svg>Paste</button>
+        <span class="sep"></span>
+        <button class="btn ghost sm danger" id="bClear" type="button" title="Clear the script (you can undo)"><svg class="i"><use href="#i-trash"/></svg>Clear</button>
+      </div>
+      <input type="file" id="file" accept=".txt,.md,.text,.docx,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
     </div>
-    <textarea id="script" spellcheck="true" aria-label="Your script" placeholder="Paste your script here, or drop a .txt or .docx file."></textarea>
-    <p class="hint">Text in square brackets, like <code>[pause]</code> or <code>[smile]</code>, shows as a cue and isn't expected to be spoken. Leave a blank line between paragraphs. Edits reach the overlay as you type.</p>
+    <div class="edbody">
+      <textarea id="script" spellcheck="true" aria-label="Your script" placeholder="Type or paste your script here."></textarea>
+      <div class="drop" id="drop">
+        <span class="big"><svg class="i"><use href="#i-upload"/></svg></span>
+        <h2>Add your script</h2>
+        <p>Drop a file anywhere in this window, or choose one. You can also paste text or type it in.</p>
+        <div class="acts">
+          <button class="btn accent" id="dChoose" type="button"><svg class="i"><use href="#i-upload"/></svg>Choose file</button>
+          <button class="btn" id="dPaste" type="button"><svg class="i"><use href="#i-paste"/></svg>Paste from clipboard</button>
+          <button class="btn" id="dType" type="button">Type it here</button>
+        </div>
+        <div class="types">Reads <span>.txt</span> <span>.docx</span> <span>.md</span> up to 10 MB</div>
+        <div class="more">New to Eyeline? <button class="link" id="dSample" type="button">Load the sample script</button></div>
+      </div>
+    </div>
+    <p class="hint"><svg class="i" style="width:14px;height:14px"><use href="#i-sparkle"/></svg>Text in square brackets, like <code>[pause]</code> or <code>[smile]</code>, shows as a cue and isn't spoken. Leave a blank line between paragraphs.</p>
   </section>
 
   <aside class="rack" aria-label="Settings">
-    <div class="sec">
-      <h3>Follow</h3>
-      <div class="seg">
-        <input type="radio" name="drive" id="dVoice" value="voice"><label for="dVoice">My voice</label>
-        <input type="radio" name="drive" id="dAuto" value="auto"><label for="dAuto">Auto-scroll</label>
+    <div class="card">
+      <h3><svg class="i"><use href="#i-mic"/></svg>Follow</h3>
+      <div class="row">
+        <div class="seg" role="radiogroup" aria-label="How the script moves">
+          <input type="radio" name="drive" id="dVoice" value="voice"><label for="dVoice"><svg class="i"><use href="#i-mic"/></svg>My voice</label>
+          <input type="radio" name="drive" id="dAuto" value="auto"><label for="dAuto"><svg class="i"><use href="#i-gauge"/></svg>Auto-scroll</label>
+        </div>
       </div>
       <div class="row" id="rLang">
-        <label class="label" for="lang">Voice model <output id="oLang"></output></label>
+        <label class="lab" for="lang">Voice model <span class="badge" id="oLang"></span></label>
         <select id="lang"></select>
         <p class="note" id="langNote"></p>
       </div>
-      <label class="sw" id="rLock"><input type="checkbox" id="lockScript"><span>Only listen for words in my script<small>More accurate. Ad-libs are ignored instead of guessed.</small></span></label>
+      <div class="row" id="rLock">
+        <label class="sw"><span class="t"><b>Only listen for words in my script</b><small>More accurate on the lines you're reading.</small></span><input type="checkbox" role="switch" id="lockScript"></label>
+      </div>
       <div class="row" id="rWpm">
-        <label class="label" for="wpm">Scroll speed <output id="oWpm"></output></label>
+        <label class="lab" for="wpm">Scroll speed <output id="oWpm"></output></label>
         <input type="range" id="wpm" min="80" max="220" step="5">
       </div>
     </div>
 
-    <div class="sec">
-      <h3>Overlay</h3>
-      <div class="seg">
-        <input type="radio" name="mode" id="mScroll" value="scroll"><label for="mScroll">Moving lines</label>
-        <input type="radio" name="mode" id="mPhrase" value="phrase"><label for="mPhrase">One phrase</label>
+    <div class="card">
+      <h3><svg class="i"><use href="#i-layers"/></svg>Overlay</h3>
+      <div class="row">
+        <div class="seg" role="radiogroup" aria-label="Layout">
+          <input type="radio" name="mode" id="mScroll" value="scroll"><label for="mScroll"><svg class="i"><use href="#i-lines"/></svg>Moving lines</label>
+          <input type="radio" name="mode" id="mPhrase" value="phrase"><label for="mPhrase"><svg class="i"><use href="#i-phrase"/></svg>One phrase</label>
+        </div>
       </div>
-      <div class="row"><label class="label" for="size">Text size <output id="oSize"></output></label><input type="range" id="size" min="20" max="80" step="1"></div>
-      <div class="row"><label class="label" for="width">Width <output id="oWidth"></output></label><input type="range" id="width" min="560" max="1600" step="10"></div>
-      <div class="row" id="rLines"><label class="label" for="lines">Lines shown <output id="oLines"></output></label><input type="range" id="lines" min="1" max="8" step="1"></div>
-      <div class="row" id="rPlen"><label class="label" for="plen">Words per phrase <output id="oPlen"></output></label><input type="range" id="plen" min="2" max="8" step="1"></div>
-      <div class="row"><label class="label" for="bg">Background <output id="oBg"></output></label><input type="range" id="bg" min="0" max="95" step="5"></div>
-      <label class="sw"><input type="checkbox" id="shadow"><span>Text shadow<small>Keeps words readable over bright windows when the background is below 60%.</small></span></label>
-      <label class="sw"><input type="checkbox" id="clickThrough"><span>Clicks pass through the text<small>Work in the app underneath while you read. The control bars stay clickable.</small></span></label>
-      <label class="sw"><input type="checkbox" id="compact"><span>Compact view<small>Hides the transcript bar and panel buttons, leaving the main bar and your script.</small></span></label>
-      <label class="sw"><input type="checkbox" id="textFirst"><span>Script above the controls<small>Puts the words closest to the webcam, with the control bar underneath.</small></span></label>
-      <label class="sw"><input type="checkbox" id="protect"><span>Hide from screen recordings<small id="protectNote">Eyeline won't appear in screen recordings, screenshots or screen sharing. You still see it and it keeps working normally.</small></span></label>
-      <button class="btn" id="bReset" type="button">Move overlay under the camera</button>
+      <div class="row"><label class="lab" for="size">Text size <output id="oSize"></output></label><input type="range" id="size" min="20" max="80" step="1"></div>
+      <div class="row"><label class="lab" for="width">Width <output id="oWidth"></output></label><input type="range" id="width" min="560" max="1600" step="10"></div>
+      <div class="row" id="rLines"><label class="lab" for="lines">Lines shown <output id="oLines"></output></label><input type="range" id="lines" min="1" max="8" step="1"></div>
+      <div class="row" id="rPlen"><label class="lab" for="plen">Words per phrase <output id="oPlen"></output></label><input type="range" id="plen" min="2" max="8" step="1"></div>
+      <div class="row"><label class="lab" for="bg">Background <output id="oBg"></output></label><input type="range" id="bg" min="0" max="95" step="5"></div>
+      <div class="row"><label class="sw"><span class="t"><b>Text shadow</b><small>A soft shadow behind the words. Helps most over bright windows or a clear background.</small></span><input type="checkbox" role="switch" id="shadow"></label></div>
+      <div class="row"><label class="sw"><span class="t"><b>Clicks pass through the text</b><small>Keep working in the app underneath. The control bars stay clickable.</small></span><input type="checkbox" role="switch" id="clickThrough"></label></div>
+      <div class="row"><label class="sw"><span class="t"><b>Compact view</b><small>Only the main bar and your script.</small></span><input type="checkbox" role="switch" id="compact"></label></div>
+      <div class="row"><label class="sw"><span class="t"><b>Script above the controls</b><small>Puts the words closest to the webcam.</small></span><input type="checkbox" role="switch" id="textFirst"></label></div>
+      <div class="row"><button class="btn sm" id="bReset" type="button" style="align-self:flex-start"><svg class="i"><use href="#i-target"/></svg>Move overlay under the camera</button></div>
     </div>
 
-    <div class="sec">
-      <h3>Shortcuts · work in any app</h3>
-      <div class="keys">
-        <kbd>Ctrl Shift Space</kbd><span>Start / pause</span>
-        <kbd>Ctrl Shift ↑ ↓</kbd><span>Back / forward a line</span>
-        <kbd>Ctrl Shift ← →</kbd><span>Scroll speed</span>
-        <kbd>Ctrl Shift R</kbd><span>Restart</span>
-        <kbd>Ctrl Shift H</kbd><span>Show / hide overlay</span>
-        <kbd>Ctrl Shift L</kbd><span>Toggle click-through</span>
-        <kbd>Ctrl Shift E</kbd><span>Open this window</span>
+    <div class="card privacy">
+      <h3><svg class="i"><use href="#i-shield"/></svg>Privacy</h3>
+      <div class="row">
+        <label class="sw" id="protectRow"><span class="t"><b>Hide from screen recording &amp; screen sharing</b><small id="protectNote">Eyeline won't appear in screen recordings, screenshots or screen sharing. You still see it and it keeps working normally.</small></span><input type="checkbox" role="switch" id="protect"></label>
+        <div class="state" id="protectState"><svg class="i"><use href="#i-shield"/></svg><div><b id="protectHead"></b><span id="protectBody"></span></div></div>
       </div>
-      <p class="note">Drag the overlay by its control bar or the move button. Its position is remembered.</p>
     </div>
+
+    <div class="card">
+      <h3><svg class="i"><use href="#i-key"/></svg>Shortcuts · work in any app</h3>
+      <div class="row">
+        <div class="keys">
+          <kbd>Ctrl Shift Space</kbd><span>Start / pause</span>
+          <kbd>Ctrl Shift ↑ ↓</kbd><span>Back / forward a line</span>
+          <kbd>Ctrl Shift ← →</kbd><span>Scroll speed</span>
+          <kbd>Ctrl Shift R</kbd><span>Restart</span>
+          <kbd>Ctrl Shift H</kbd><span>Show / hide overlay</span>
+          <kbd>Ctrl Shift L</kbd><span>Toggle click-through</span>
+          <kbd>Ctrl Shift E</kbd><span>Open this window</span>
+        </div>
+      </div>
+    </div>
+    <div class="rackfoot"><button class="btn ghost sm" id="bDefaults" type="button"><svg class="i"><use href="#i-sliders"/></svg>Reset settings to defaults</button></div>
   </aside>
 </div>
 
 <footer class="status">
-  <span class="dot" id="sDot"></span><span id="sMsg">Ready</span>
+  <span class="d" id="sDot"></span><span id="sMsg">Ready</span>
   <span class="spacer"></span>
   <span class="bar" aria-hidden="true"><i id="sBar"></i></span>
   <span class="mono" id="sPct">0%</span><span class="mono" id="sTime">0:00</span>
 </footer>
+
+<div class="dragging-over" id="dragOver" hidden><div><svg class="i"><use href="#i-upload"/></svg>Drop to import your script</div></div>
+<div id="toasts" aria-live="polite"></div>
 
 <script src="vendor/mammoth.browser.min.js"></script>
 <script>
@@ -179,102 +344,206 @@ It's simple. You don't need a fancy app, and you don't need to be a morning pers
 Here's what we'll cover. First, how to get everything out of your head and onto paper. Second, how to pick the three things that actually matter this week. And third, how to protect time for them before everyone else claims it.
 
 [look at camera] By the end of this video you'll have a plan you can start using tonight. So grab a pen, and let's get into it.`;
-
+const MAX_BYTES = 10 * 1024 * 1024;
 const PLATFORM = api.platform || 'win32';
-if (PLATFORM === 'darwin') document.querySelectorAll('kbd').forEach(k => k.textContent = k.textContent.replace(/Ctrl Shift/g, '⌘ Shift'));
-const PROTECT_NOTE = {
-  darwin: 'Hides Eyeline from Google Meet in Chrome. On macOS 15 and later, Zoom, Teams, QuickTime and screenshots can still capture it, so share a single window instead of your whole screen.',
-  linux: 'Linux doesn’t let apps hide from screen capture. To keep Eyeline out, share or record a single window instead of your whole screen.'
-}[PLATFORM];
-if (PROTECT_NOTE) $('protectNote').textContent = PROTECT_NOTE;
+const MOD = PLATFORM === 'darwin' ? '⌘' : 'Ctrl';
+if (PLATFORM === 'darwin') {
+  document.querySelectorAll('kbd').forEach(k => k.textContent = k.textContent.replace(/Ctrl Shift/g, '⌘ Shift'));
+  document.querySelectorAll('[title]').forEach(el => el.title = el.title.replace(/Ctrl\+/g, '⌘'));
+}
+const store = { get: (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+/* ---------- toasts ---------- */
+function toast(msg, opts = {}){
+  const t = document.createElement('div'); t.className = 'toast' + (opts.error ? ' err' : ''); t.setAttribute('role', opts.error ? 'alert' : 'status');
+  const m = document.createElement('span'); m.className = 'msg'; m.textContent = msg; t.appendChild(m);
+  let timer;
+  const close = () => { clearTimeout(timer); t.remove(); };
+  if (opts.action){ const b = document.createElement('button'); b.type = 'button'; b.textContent = opts.action.label; b.onclick = () => { close(); opts.action.run(); }; t.appendChild(b); }
+  const x = document.createElement('button'); x.type = 'button'; x.className = 'x'; x.setAttribute('aria-label', 'Dismiss'); x.innerHTML = '<svg class="i"><use href="#i-x"/></svg>'; x.onclick = close; t.appendChild(x);
+  const box = $('toasts'); while (box.children.length >= 2) box.firstChild.remove(); box.appendChild(t);
+  timer = setTimeout(close, opts.ms || (opts.action ? 8000 : 4500));
+  t.addEventListener('mouseenter', () => clearTimeout(timer));
+  t.addEventListener('mouseleave', () => { timer = setTimeout(close, 3000); });
+  return t;
+}
+
+/* ---------- script + document ---------- */
 const st = await api.invoke('get-state');
 let S = st.settings, models = st.models;
 const ta = $('script');
+let docName = store.get('docName', 'Untitled script');
 ta.value = st.script == null ? SAMPLE : st.script;
-if (st.script == null) api.send('set-script', ta.value);
+if (st.script == null) { docName = 'Sample script'; api.send('set-script', ta.value); }
 
 const fmt = sec => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec/60) + ':' + String(sec%60).padStart(2,'0'); };
 function wordCount(t){ let c = 0, cue = false; t.split(/\s+/).filter(Boolean).forEach(w => { const isCue = cue || w.includes('['); if (w.includes('[') && !w.includes(']')) cue = true; if (w.includes(']')) cue = false; if (!isCue && /[\p{L}\p{N}]/u.test(w)) c++; }); return c; }
-function stats(){ const c = wordCount(ta.value); $('stats').textContent = c ? `${c} words · about ${fmt(c / S.wpm * 60)} at ${S.wpm} wpm` : 'No words yet'; }
+let typing = false;
+function refreshDoc(){
+  const c = wordCount(ta.value), empty = !ta.value.trim();
+  $('stats').textContent = c ? `${c} words · about ${fmt(c / S.wpm * 60)} at ${S.wpm} wpm` : 'No words yet';
+  $('docName').textContent = empty ? 'Untitled script' : docName;
+  $('bClear').disabled = empty;
+  $('drop').hidden = !empty || typing;
+}
 let sendT = 0;
-ta.addEventListener('input', () => { stats(); clearTimeout(sendT); sendT = setTimeout(() => api.send('set-script', ta.value), 250); });
-$('bClear').onclick = () => { ta.value = ''; ta.dispatchEvent(new Event('input')); ta.focus(); };
-$('bUpload').onclick = () => $('file').click();
+function pushScript(){ clearTimeout(sendT); api.send('set-script', ta.value); }
+function setScript(text, name){ ta.value = text; docName = name || 'Untitled script'; store.set('docName', docName); refreshDoc(); pushScript(); }
+ta.addEventListener('input', () => { if (!ta.value.trim()) { docName = 'Untitled script'; store.set('docName', docName); } refreshDoc(); clearTimeout(sendT); sendT = setTimeout(pushScript, 250); });
+ta.addEventListener('focus', () => { typing = true; refreshDoc(); });
+ta.addEventListener('blur', () => { typing = false; refreshDoc(); });
+
+function replaceWithUndo(text, name, message){
+  const prev = { text: ta.value, name: docName };
+  setScript(text, name);
+  if (prev.text.trim() && prev.text !== text) toast(message, { action: { label: 'Undo', run: () => setScript(prev.text, prev.name) } });
+  else toast(message);
+}
+function clearScript(){
+  if (!ta.value.trim()) return;
+  const prev = { text: ta.value, name: docName };
+  setScript('', 'Untitled script');
+  toast('Script cleared', { action: { label: 'Undo', run: () => { setScript(prev.text, prev.name); toast('Script restored'); } } });
+}
+$('bClear').onclick = clearScript;
+
 async function readFile(f){
   if (!f) return;
+  const ext = (f.name.match(/\.([^.]+)$/) || [, ''])[1].toLowerCase();
+  if (f.size > MAX_BYTES) return toast(`${f.name} is ${(f.size / 1048576).toFixed(1)} MB. Eyeline imports files up to 10 MB.`, { error: true });
+  if (ext === 'doc') return toast('That’s an older .doc file. In Word, choose File › Save As › Word Document (.docx), then import that.', { error: true, ms: 9000 });
+  if (ext === 'pdf' || ext === 'pages' || ext === 'rtf') return toast(`Eyeline can’t read .${ext} files yet. Copy the text and click Paste, or save it as .txt or .docx.`, { error: true, ms: 9000 });
   try{
     let text;
-    if (/\.docx$/i.test(f.name)) text = (await window.mammoth.extractRawText({arrayBuffer: await f.arrayBuffer()})).value;
-    else if (/\.(txt|md|text)$/i.test(f.name) || (f.type || '').startsWith('text/')) text = await f.text();
-    else { setMsg('That file type isn’t supported. Use .txt or .docx, or paste the text.', true); return; }
-    ta.value = text.replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim(); ta.dispatchEvent(new Event('input'));
-  }catch(e){ setMsg('Couldn’t read that file. Save it as .txt, or paste the text in.', true); }
+    if (ext === 'docx') text = (await window.mammoth.extractRawText({arrayBuffer: await f.arrayBuffer()})).value;
+    else if (['txt','md','text'].includes(ext) || (f.type || '').startsWith('text/')) text = await f.text();
+    else return toast(`Eyeline reads .txt, .docx and .md files. “${f.name}” isn’t one of those.`, { error: true });
+    text = text.replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim();
+    if (!text) return toast(`${f.name} has no text in it.`, { error: true });
+    replaceWithUndo(text, f.name, `Imported ${f.name} · ${wordCount(text)} words`);
+  }catch(e){ toast(`Couldn’t read ${f.name}. Try saving it again as .txt or .docx, or paste the text in.`, { error: true }); }
 }
+const choose = () => $('file').click();
+$('bUpload').onclick = choose; $('dChoose').onclick = choose;
 $('file').onchange = e => { readFile(e.target.files[0]); e.target.value = ''; };
-ta.addEventListener('dragover', e => { e.preventDefault(); ta.classList.add('drop'); });
-ta.addEventListener('dragleave', () => ta.classList.remove('drop'));
-ta.addEventListener('drop', e => { e.preventDefault(); ta.classList.remove('drop'); if (e.dataTransfer.files.length) readFile(e.dataTransfer.files[0]); });
+async function pasteClipboard(){
+  let text = '';
+  try { text = await api.invoke('clipboard-read'); } catch (e) {}
+  text = (text || '').replace(/\r/g,'').trim();
+  if (!text) return toast('Your clipboard is empty. Copy your script first, then click Paste.', { error: true });
+  replaceWithUndo(text, 'Pasted script', `Pasted ${wordCount(text)} words from the clipboard`);
+}
+$('bPaste').onclick = pasteClipboard; $('dPaste').onclick = pasteClipboard;
+$('dType').onclick = () => { typing = true; refreshDoc(); ta.focus(); };
+$('dSample').onclick = () => replaceWithUndo(SAMPLE, 'Sample script', 'Loaded the sample script');
 
-/* settings */
-const SIZES = {en: 'about 40 MB'};
+// Drop a file anywhere in the window (and never let a drop open the file in place of the app)
+let dragDepth = 0;
+const hasFiles = e => Array.from(e.dataTransfer?.types || []).includes('Files');
+window.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $('dragOver').hidden = false; });
+window.addEventListener('dragover', e => { e.preventDefault(); if (hasFiles(e)) e.dataTransfer.dropEffect = 'copy'; });
+window.addEventListener('dragleave', e => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $('dragOver').hidden = true; } });
+window.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; $('dragOver').hidden = true; const f = e.dataTransfer?.files?.[0]; if (f) readFile(f); });
+
+/* ---------- settings ---------- */
 function fillLang(){
   const sel = $('lang'); sel.innerHTML = '';
-  for (const [k, m] of Object.entries(models)){
-    const o = document.createElement('option'); o.value = k; o.textContent = m.label; sel.appendChild(o);
-  }
+  for (const [k, m] of Object.entries(models)){ const o = document.createElement('option'); o.value = k; o.textContent = m.label; sel.appendChild(o); }
   sel.value = S.lang;
-  const m = models[S.lang];
-  $('oLang').textContent = m && m.ready ? 'ready' : 'not downloaded';
-  $('langNote').textContent = m && m.ready
-    ? 'Runs on this computer. Nothing you say leaves your PC.'
-    : 'Downloads once (about 35–45 MB) the first time you press Start, then works offline.';
+  const m = models[S.lang], ready = m && m.ready;
+  $('oLang').textContent = ready ? 'Ready' : 'Not downloaded'; $('oLang').className = 'badge' + (ready ? ' ok' : '');
+  $('langNote').textContent = ready ? 'Runs on this computer. Nothing you say leaves it.' : 'Downloads once (35–45 MB) the first time you press Start, then works offline.';
 }
+const PROTECT = {
+  win32: { on: ['Hidden', 'Recordings, screenshots and shares (OBS, Zoom, Teams, Meet, Snipping Tool) won’t show Eyeline. The taskbar icon still shows in a whole-screen share.'],
+           off: ['Visible in recordings', 'Anyone watching your screen share or recording can see your script.'] },
+  darwin: { on: ['Partly hidden', 'Hidden from Google Meet in Chrome. On macOS 15 and later, Zoom, Teams, QuickTime and screenshots can still capture it. Share a single window to keep it out.'],
+            off: ['Visible in recordings', 'Anyone watching your screen share or recording can see your script.'] },
+  linux: { na: ['Not available on Linux', 'Linux doesn’t let apps hide from screen capture. Share or record a single window instead of your whole screen.'] }
+}[PLATFORM] || {};
+function syncPrivacy(){
+  const na = PLATFORM === 'linux';
+  $('protect').disabled = na; $('protectRow').classList.toggle('disabled', na);
+  if (na) $('protectNote').textContent = 'Not available on this system.';
+  const key = na ? 'na' : (S.protect ? 'on' : 'off'), [head, body] = PROTECT[key];
+  const cls = na ? 'na' : (S.protect ? (PLATFORM === 'darwin' ? 'exposed' : 'safe') : 'exposed');
+  $('protectState').className = 'state ' + cls; $('protectHead').textContent = head; $('protectBody').textContent = body;
+  $('protectState').querySelector('use').setAttribute('href', S.protect && !na ? '#i-shield' : '#i-shield-off');
+  const pill = $('privPill');
+  pill.className = 'pill ' + (na ? 'na' : S.protect ? (PLATFORM === 'darwin' ? 'exposed' : 'safe') : 'exposed');
+  pill.querySelector('use').setAttribute('href', S.protect && !na ? '#i-shield' : '#i-shield-off');
+  $('privTxt').textContent = na ? 'Can’t hide on Linux' : S.protect ? (PLATFORM === 'darwin' ? 'Partly hidden from recording' : 'Hidden from recording & sharing') : 'Visible in recording & sharing';
+  pill.disabled = na;
+  pill.title = na ? PROTECT.na[1] : (S.protect ? 'Click to show Eyeline in recordings and screen shares' : 'Click to hide Eyeline from screen recording and screen sharing');
+}
+function paintRange(el){ const p = (el.value - el.min) / (el.max - el.min) * 100; el.style.setProperty('--p', p + '%'); }
 function sync(){
   $(S.drive === 'voice' ? 'dVoice' : 'dAuto').checked = true;
   $(S.mode === 'scroll' ? 'mScroll' : 'mPhrase').checked = true;
-  for (const k of ['wpm','size','width','lines','plen','bg']) $(k).value = S[k];
+  for (const k of ['wpm','size','width','lines','plen','bg']) { $(k).value = S[k]; paintRange($(k)); }
   for (const k of ['lockScript','shadow','clickThrough','protect','compact','textFirst']) $(k).checked = !!S[k];
   $('oWpm').textContent = S.wpm + ' wpm';
   $('oSize').textContent = S.size + ' px';
   $('oWidth').textContent = S.width + ' px';
   $('oLines').textContent = S.lines;
   $('oPlen').textContent = S.plen;
-  $('oBg').textContent = S.bg === 0 ? 'clear' : S.bg + '%';
+  $('oBg').textContent = S.bg === 0 ? 'Clear' : S.bg + '%';
   $('rLang').hidden = $('rLock').hidden = S.drive !== 'voice';
   $('rWpm').hidden = S.drive !== 'auto';
   $('rPlen').hidden = S.mode !== 'phrase';
-  fillLang(); stats();
+  $('rLines').hidden = false;
+  fillLang(); syncPrivacy(); refreshDoc();
 }
 function set(p){ S = {...S, ...p}; api.send('set-settings', p); sync(); }
 document.querySelectorAll('input[name=drive]').forEach(r => r.onchange = () => set({drive: r.value}));
 document.querySelectorAll('input[name=mode]').forEach(r => r.onchange = () => set({mode: r.value}));
 for (const k of ['wpm','size','width','lines','plen','bg']) $(k).addEventListener('input', e => set({[k]: +e.target.value}));
-for (const k of ['lockScript','shadow','clickThrough','protect','compact','textFirst']) $(k).addEventListener('change', e => set({[k]: e.target.checked}));
+for (const k of ['lockScript','shadow','clickThrough','compact','textFirst']) $(k).addEventListener('change', e => set({[k]: e.target.checked}));
+$('protect').addEventListener('change', e => { set({protect: e.target.checked}); toast(e.target.checked ? 'Eyeline is now hidden from screen recording and screen sharing' : 'Eyeline will now show up in screen recordings and shares'); });
+$('privPill').onclick = () => { if (PLATFORM === 'linux') return; $('protect').checked = !S.protect; $('protect').dispatchEvent(new Event('change')); };
 $('lang').onchange = e => set({lang: e.target.value});
-$('bReset').onclick = () => api.send('cmd', 'reset-position');
+$('bReset').onclick = () => { api.send('cmd', 'reset-position'); toast('Overlay moved back under the camera'); };
+$('bDefaults').onclick = () => {
+  const prev = {...S};
+  api.send('cmd', 'reset-settings');
+  toast('Settings reset to defaults', { action: { label: 'Undo', run: () => { const { overlayX, overlayY, ...rest } = prev; set(rest); toast('Settings restored'); } } });
+};
 sync();
 
-/* transport */
-let ovVisible = false;
+/* ---------- transport ---------- */
+let ovVisible = false, running = false, progress = 0;
+function hasScript(){ return wordCount(ta.value) > 0; }
+function needScript(){ toast('Add a script first. Drop a file, click Paste, or type it in.', { error: true }); typing = false; refreshDoc(); }
 $('bShow').onclick = () => api.send('cmd', ovVisible ? 'hide' : 'show');
-$('bPlay').onclick = () => api.send('cmd', 'toggle');
-$('bRestart').onclick = () => api.send('cmd', 'restart');
-api.on('overlay-visible', v => { ovVisible = v; $('ovPill').classList.toggle('on', v); $('ovTxt').textContent = v ? 'Overlay on screen' : 'Overlay hidden'; $('bShow').textContent = v ? 'Hide overlay' : 'Show overlay'; });
+$('bPlay').onclick = () => { if (!running && !hasScript()) return needScript(); pushScript(); api.send('cmd', 'toggle'); };
+$('bRestart').onclick = () => { api.send('cmd', 'restart'); };
+api.on('overlay-visible', v => {
+  ovVisible = v; $('ovPill').classList.toggle('on', v); $('ovTxt').textContent = v ? 'Overlay on screen' : 'Overlay hidden';
+  $('bShowTxt').textContent = v ? 'Hide overlay' : 'Show overlay'; $('bShowIc').querySelector('use').setAttribute('href', v ? '#i-eye-off' : '#i-eye');
+});
 api.on('settings', s => { S = s; sync(); });
 api.on('models', m => { models = m; fillLang(); });
+api.on('need-script', () => { needScript(); });
 api.on('model-progress', m => { if (m.phase === 'download') setMsg(`Downloading ${models[m.lang]?.label || ''} voice model · ${m.pct}%`); else if (m.phase === 'unpack') setMsg('Preparing voice model…'); });
 function setMsg(t, err){ const el = $('sMsg'); el.textContent = t; el.className = err ? 'err' : ''; }
 api.on('status', s => {
-  $('bPlay').textContent = s.running || s.counting ? 'Pause' : 'Start';
-  $('sDot').className = 'dot' + (s.running ? (s.drive === 'voice' ? (s.listening ? ' live' : '') : ' auto') : '');
+  running = s.running || s.counting; progress = s.progress;
+  $('bPlayTxt').textContent = running ? 'Pause' : (s.progress >= 1 ? 'Start again' : 'Start');
+  $('bPlayIc').querySelector('use').setAttribute('href', running ? '#i-pause' : '#i-play');
+  $('bRestart').disabled = !running && s.progress === 0 && s.elapsed < 0.5;
+  $('sDot').className = 'd' + (s.running ? (s.drive === 'voice' ? (s.listening ? ' live' : '') : ' auto') : '');
   setMsg(s.message, s.error);
   const pct = Math.round(s.progress * 100);
   $('sBar').style.width = pct + '%'; $('sPct').textContent = pct + '%'; $('sTime').textContent = fmt(s.elapsed);
 });
+$('bRestart').disabled = true;
 document.addEventListener('keydown', e => {
-  if (e.target === ta) return;
-  if (e.key === ' '){ e.preventDefault(); api.send('cmd', 'toggle'); }
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); choose(); return; }
+  if (e.key !== ' ') return;
+  if (e.target.closest && e.target.closest('input,textarea,select,button,a,[contenteditable]')) return; // let Space work normally on controls
+  e.preventDefault(); $('bPlay').click();
 });
+refreshDoc();
 })();
 </script>
 </body>
