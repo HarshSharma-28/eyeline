@@ -1,7 +1,7 @@
 {
   "name": "eyeline",
   "productName": "Eyeline",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A teleprompter that floats under your webcam, follows your voice offline, and can hide from screen recordings.",
   "main": "main.js",
   "author": "Harsh Sharma",
