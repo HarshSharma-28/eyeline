@@ -29,24 +29,55 @@ body{font-family:var(--sans);color:var(--ink);user-select:none;-webkit-user-sele
 .bar{display:flex;align-items:center;gap:6px;padding:6px;border-radius:13px;background:var(--shell);
   box-shadow:inset 0 0 0 1px var(--shell-line),0 4px 14px rgba(0,0,0,.24);max-width:100%;box-sizing:border-box}
 button{font:inherit;color:var(--ink);cursor:pointer}
-.key{display:inline-flex;align-items:center;gap:9px;height:34px;padding:0 8px 0 12px;border-radius:9px;background:var(--btn);border:0;
-  box-shadow:inset 0 0 0 1px var(--btn-line);font-size:14px;font-weight:500;white-space:nowrap}
-.key:hover{background:#2c2c31}
+.key{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 8px 0 10px;border-radius:9px;background:var(--btn);border:0;
+  box-shadow:inset 0 0 0 1px var(--btn-line);font-size:14px;font-weight:500;white-space:nowrap;transition:background .12s,transform .05s}
+.key svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.key:hover,.ico:hover,.seg button:hover,.spd button:hover{background:#2c2c31}
+button:active{transform:translateY(1px)}
+button:focus{outline:none}
+button:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+.key.primary{background:#f3f3f5;color:#0b0b0d;box-shadow:none}
+.key.primary:hover{background:#ffffff}
+#tPlay{display:inline-block;min-width:3.1em}
+.key.primary kbd{background:rgba(0,0,0,.08);color:#3a3a40}
+#toolbar{gap:5px}
+/* narrow overlays: drop shortcut hints, then labels, so the bar never spills past the panel */
+#toolbar.t1 #bRestart kbd,#toolbar.t1 #bScript kbd,#toolbar.t2 #bPlay kbd,#toolbar.t3 .lbl{display:none}
+#toolbar.t3 #bRestart,#toolbar.t3 #bScript{padding:0 9px}
 .key kbd{font-family:var(--sans);font-size:11.5px;font-weight:500;color:var(--ink-2);background:var(--kbd);border-radius:6px;padding:3px 6px;letter-spacing:.02em}
 .key.sm{height:28px;padding:0 6px;gap:6px;font-size:12.5px}
 .key.sm.only{padding:0 4px}
 .ico{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:9px;background:var(--btn);border:0;box-shadow:inset 0 0 0 1px var(--btn-line);color:var(--ink);position:relative;flex:none}
-.ico:hover{background:#2c2c31}
 .ico svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ico.sm{width:28px;height:28px}
 .ico.sm svg{width:15px;height:15px}
 .ico .badge{position:absolute;top:3px;right:3px;width:8px;height:8px;border-radius:50%;background:var(--rec);box-shadow:0 0 0 2px var(--shell);display:none}
 .ico.live .badge{display:block}
+.ico.on{background:#3a3a40;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+#bMic.muted{color:#f0a534;background:rgba(240,165,52,.14);box-shadow:inset 0 0 0 1px rgba(240,165,52,.35)}
+#bMic .off{display:none}
+#bMic.muted .on-ic{display:none}
+#bMic.muted .off{display:block}
+.shield{display:inline-grid;place-items:center;width:22px;height:34px;color:var(--live);flex:none;margin:0 -2px 0 2px}
+.shield svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.shield.part{color:#f0a534}
+/* menu */
+.menu{position:absolute;z-index:20;min-width:250px;padding:6px;border-radius:12px;background:rgba(30,30,34,.98);box-shadow:inset 0 0 0 1px var(--shell-line),0 10px 30px rgba(0,0,0,.4)}
+.menu button{display:flex;align-items:center;gap:10px;width:100%;height:34px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--ink);font-size:13.5px;text-align:left}
+.menu button:hover{background:rgba(255,255,255,.08)}
+.menu button svg,.mstate svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.menu button kbd{margin-left:auto;font-family:var(--sans);font-size:11px;color:var(--ink-3)}
+.menu button.danger{color:#ff8a8d}
+.menu .msep{height:1px;background:var(--shell-line);margin:5px 4px}
+.mstate{display:flex;gap:10px;align-items:flex-start;padding:8px 10px 9px;font-size:12.5px;line-height:1.4;color:var(--ink-2)}
+.mstate b{display:block;color:var(--ink);font-weight:600;font-size:13px}
+.mstate.safe svg{color:var(--live)}
+.mstate.part svg,.mstate.off svg{color:#f0a534}
 .drag{cursor:grab}
 .drag:active{cursor:grabbing}
 body.dragging,body.dragging *{cursor:grabbing!important}
 body.dragging .bar{box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),0 8px 22px rgba(0,0,0,.32)}
-.end{height:34px;padding:0 16px;border-radius:9px;border:0;background:var(--rec);color:#fff;font-size:14px;font-weight:600}
+.end{height:34px;padding:0 16px;border-radius:9px;border:0;background:var(--rec);color:#fff;font-size:14px;font-weight:600;transition:filter .12s,transform .05s}
 .end:hover{filter:brightness(1.08)}
 .sep{width:1px;height:22px;background:var(--shell-line);margin:0 2px}
 
@@ -96,15 +127,25 @@ body.shadow #track span.done,body.shadow #pcur span.done{text-shadow:0 1px 2px r
 <body class="paused">
 <div id="box">
   <div id="toolbar" class="bar hit">
-    <span class="ico" id="icMic" title="Microphone"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><i class="badge"></i></span>
-    <button class="key" id="bPlay" type="button"><span id="tPlay">Start</span><kbd>Ctrl ⇧ Space</kbd></button>
-    <button class="key" id="bRestart" type="button">Restart<kbd>Ctrl ⇧ R</kbd></button>
-    <button class="key" id="bScript" type="button">Script<kbd>Ctrl ⇧ E</kbd></button>
+    <span class="shield" id="icShield" hidden title="Hidden from screen recording &amp; screen sharing"><svg viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></span>
+    <button class="ico" id="bMic" type="button" title="Mute the microphone (your place is held)" aria-pressed="false"><svg viewBox="0 0 24 24" class="on-ic"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><svg viewBox="0 0 24 24" class="off"><path d="M3 3l18 18M9 9v2a3 3 0 0 0 5.1 2.1M15 9.3V6a3 3 0 0 0-5.7-1.3M19 11a7 7 0 0 1-1.2 3.9M5 11a7 7 0 0 0 10.8 5.9M12 18v3"/></svg><i class="badge"></i></button>
+    <button class="key primary" id="bPlay" type="button" title="Start or pause (Ctrl+Shift+Space)"><span id="icPlay"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg></span><span id="tPlay">Start</span><kbd>Ctrl ⇧ Space</kbd></button>
+    <button class="key" id="bRestart" type="button" title="Back to the start (Ctrl+Shift+R)"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span class="lbl">Restart</span><kbd>Ctrl ⇧ R</kbd></button>
+    <button class="key" id="bScript" type="button" title="Open your script (Ctrl+Shift+E)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg><span class="lbl">Script</span><kbd>Ctrl ⇧ E</kbd></button>
     <span class="sep"></span>
     <span class="ico drag" id="bMove" title="Drag to move" role="button" aria-label="Drag to move the overlay"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg></span>
-    <button class="ico" id="bCompact" type="button" title="Compact view"><svg viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></button>
-    <button class="ico" id="bMore" type="button" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
+    <button class="ico" id="bCompact" type="button" title="Compact view" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></svg></button>
+    <button class="ico" id="bMore" type="button" title="More" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></button>
     <button class="end" id="bEnd" type="button" title="Stop and hide (Ctrl+Shift+H)">End</button>
+  </div>
+
+  <div id="menu" class="menu hit" role="menu" hidden>
+    <div class="mstate" id="mPriv"><svg viewBox="0 0 24 24"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><div><b id="mPrivHead"></b><span id="mPrivBody"></span></div></div>
+    <div class="msep"></div>
+    <button type="button" role="menuitem" id="mSettings"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>Settings</button>
+    <button type="button" role="menuitem" id="mCenter"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/></svg>Move under the camera</button>
+    <div class="msep"></div>
+    <button type="button" role="menuitem" id="mQuit" class="danger"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>Quit Eyeline</button>
   </div>
 
   <div id="heard" class="bar hit">
@@ -116,12 +157,12 @@ body.shadow #track span.done,body.shadow #pcur span.done{text-shadow:0 1px 2px r
 
   <div id="panel">
     <div id="phead" class="hit">
-      <button class="key sm only" id="bBack" type="button" title="Back a line"><kbd>Ctrl ⇧ ↑</kbd></button>
-      <button class="key sm only" id="bFwd" type="button" title="Forward a line"><kbd>Ctrl ⇧ ↓</kbd></button>
+      <button class="key sm" id="bBack" type="button" title="Back a line (Ctrl+Shift+↑)"><svg viewBox="0 0 24 24"><path d="M18 15l-6-6-6 6"/></svg><kbd>Ctrl ⇧ ↑</kbd></button>
+      <button class="key sm" id="bFwd" type="button" title="Forward a line (Ctrl+Shift+↓)"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg><kbd>Ctrl ⇧ ↓</kbd></button>
       <span id="pinfo">0% · 0:00</span>
       <span class="grow"></span>
-      <button class="key sm" id="bSmaller" type="button" title="Smaller text">A−</button>
-      <button class="key sm" id="bBigger" type="button" title="Larger text">A+</button>
+      <button class="key sm" id="bSmaller" type="button" title="Smaller text" aria-label="Smaller text">A−</button>
+      <button class="key sm" id="bBigger" type="button" title="Larger text" aria-label="Larger text">A+</button>
       <button class="ico sm" id="bExpand" type="button" title="Show more lines"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/></svg></button>
     </div>
     <div id="body">
@@ -143,7 +184,7 @@ const MIC_HELP = PLATFORM === 'darwin' ? 'Microphone blocked. Allow Eyeline in S
 // Shortcut labels: ⌘ on a Mac, Ctrl elsewhere
 if (PLATFORM === 'darwin') {
   document.querySelectorAll('kbd').forEach(k => k.textContent = k.textContent.replace(/Ctrl/g, '⌘'));
-  document.querySelectorAll('[title]').forEach(el => el.title = el.title.replace(/Ctrl\+Shift\+/g, '⌘⇧'));
+  document.querySelectorAll('[title]').forEach(el => el.title = el.title.replace(/Ctrl\+Shift\+/g, '⌘⇧').replace(/Ctrl\+/g, '⌘'));
 }
 let S = {drive:'voice', mode:'scroll', lang:'en-us', lockScript:true, wpm:140, size:32, width:760, lines:3, plen:4, bg:90, clickThrough:true, shadow:true, compact:false, textFirst:false};
 let scriptText = '';
@@ -212,7 +253,7 @@ function renderTrack(){
 function layout(){
   document.documentElement.style.setProperty('--bgA', (S.bg / 100).toFixed(2));
   panel.classList.toggle('clear', S.bg < 10);
-  document.body.classList.toggle('shadow', S.shadow !== false && S.bg < 60);
+  document.body.classList.toggle('shadow', S.shadow !== false);
   box.classList.toggle('compact', !!S.compact);
   box.classList.toggle('textFirst', !!S.textFirst);
   const isPhrase = S.mode === 'phrase';
@@ -335,7 +376,7 @@ function showHeard(){
     chipsEl.innerHTML = '';
     if (msgChip){ const c = document.createElement('span'); c.className = 'chip ' + (msgChip.err ? 'warn' : 'dim'); c.textContent = msgChip.text; chipsEl.appendChild(c); return; }
     const all = heardFinal.concat(heardPartial).slice(-18);
-    if (!all.length){ const c = document.createElement('span'); c.className = 'chip dim'; c.textContent = S.drive === 'voice' ? (running ? 'Listening…' : 'Words you say appear here') : `Auto-scroll at ${S.wpm} words a minute`; chipsEl.appendChild(c); return; }
+    if (!all.length){ const c = document.createElement('span'); c.className = 'chip dim'; c.textContent = S.drive === 'voice' ? (running ? (muted ? 'Microphone muted · your place is held' : 'Listening…') : 'Words you say appear here') : `Auto-scroll at ${S.wpm} words a minute`; chipsEl.appendChild(c); return; }
     for (let i = 0; i < all.length; i += 3){ const c = document.createElement('span'); c.className = 'chip'; c.textContent = all.slice(i, i + 3).join(' '); chipsEl.appendChild(c); }
     while (chipsEl.scrollWidth > chipsEl.clientWidth + 1 && chipsEl.children.length > 1) chipsEl.removeChild(chipsEl.firstChild);
   });
@@ -343,6 +384,7 @@ function showHeard(){
 const heardWords = txt => (txt || '').split(/\s+/).filter(w => w && w !== '[unk]');
 
 /* ---------- voice follow (offline, Vosk) ---------- */
+let muted = false;
 let model = null, modelLang = null, recog = null, recogKey = '', actx = null, stream = null, proc = null, voiceOn = false, lastTail = '';
 function lev(a, b){
   let prev = Array.from({length: b.length + 1}, (_, j) => j);
@@ -415,7 +457,7 @@ async function startVoice(){
       const src = actx.createMediaStreamSource(stream);
       proc = actx.createScriptProcessor(4096, 1, 1);
       proc.onaudioprocess = e => {
-        if (!(voiceOn && recog)) return;
+        if (!(voiceOn && recog) || muted) return;
         const d = e.inputBuffer.getChannelData(0); let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] * d[i];
         level = Math.max(level, Math.sqrt(s / (d.length / 4)));
         try{ recog.acceptWaveform(e.inputBuffer); }catch(_){}
@@ -439,7 +481,8 @@ function stopVoice(){ voiceOn = false; if (recog){ try{ recog.retrieveFinalResul
 /* ---------- run control ---------- */
 let countTimer = 0;
 function play(){
-  if (!n || running) return;
+  if (running) return;
+  if (!sIdx.length){ message('Add a script first. Opening the Eyeline window…', true); api.send('cmd', 'need-script'); return; }
   if (pos >= n){ pos = 0; elapsed = 0; resetClasses(); if (S.mode === 'scroll'){ y = yForPos(0); applyY(); } }
   clearInterval(countTimer);
   const c = $('count'); let k = 3; c.textContent = k; c.hidden = false; view.style.visibility = 'hidden'; phraseEl.style.visibility = 'hidden';
@@ -465,25 +508,38 @@ function restart(){ const was = running; pause(); pos = 0; elapsed = 0; resetCla
 let msgText = 'Ready', msgErr = false;
 function message(t, err){
   msgChip = t ? {text: t, err: !!err} : null;
-  msgText = t || (running ? (S.drive === 'voice' ? 'Listening' : 'Auto-scroll · ' + S.wpm + ' wpm') : 'Paused');
+  msgText = t || (running ? (S.drive === 'voice' ? (muted ? 'Microphone muted' : 'Listening') : 'Auto-scroll · ' + S.wpm + ' wpm') : 'Paused');
   msgErr = !!err; showHeard(); report();
 }
+const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>', ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></svg>';
 function updateUi(){
   document.body.classList.toggle('paused', !running);
-  $('tPlay').textContent = running || counting() ? 'Pause' : (pos >= n && n ? 'Again' : 'Start');
-  $('icMic').classList.toggle('live', running && voiceOn);
-  $('meter').classList.toggle('on', running && voiceOn);
+  const busy = running || counting();
+  $('tPlay').textContent = busy ? 'Pause' : (pos >= n && n ? 'Again' : 'Start');
+  $('icPlay').innerHTML = busy ? ICON_PAUSE : ICON_PLAY;
+  const mic = $('bMic');
+  mic.hidden = S.drive !== 'voice';
+  mic.classList.toggle('live', running && voiceOn && !muted);
+  mic.classList.toggle('muted', muted);
+  mic.setAttribute('aria-pressed', String(muted));
+  mic.title = muted ? 'Unmute the microphone' : 'Mute the microphone (your place is held)';
+  $('meter').classList.toggle('on', running && voiceOn && !muted);
+  $('bCompact').classList.toggle('on', !!S.compact); $('bCompact').setAttribute('aria-pressed', String(!!S.compact));
+  $('bCompact').title = S.compact ? 'Show the full overlay' : 'Compact view';
+  const prot = S.protect && PLATFORM !== 'linux';
+  $('icShield').hidden = !prot; $('icShield').classList.toggle('part', PLATFORM === 'darwin');
+  $('icShield').title = PLATFORM === 'darwin' ? 'Partly hidden from screen recording (macOS limits this)' : 'Hidden from screen recording & screen sharing';
   document.querySelectorAll('#segDrive button').forEach(b => b.classList.toggle('on', b.dataset.d === S.drive));
   $('spd').hidden = S.drive !== 'auto';
   $('wpm').textContent = S.wpm + ' wpm';
   $('bExpand').title = S.lines >= 5 ? 'Show fewer lines' : 'Show more lines';
-  if (!msgChip) msgText = running ? (S.drive === 'voice' ? 'Listening' : 'Auto-scroll · ' + S.wpm + ' wpm') : (counting() ? 'Starting' : 'Paused');
-  showHeard(); report();
+  if (!msgChip) msgText = running ? (S.drive === 'voice' ? (muted ? 'Microphone muted' : 'Listening') : 'Auto-scroll · ' + S.wpm + ' wpm') : (counting() ? 'Starting' : 'Paused');
+  showHeard(); report(); queueFit();
 }
 function report(){
   const pct = sIdx.length ? Math.round(100 * sb[pos] / sIdx.length) : 0;
   $('pinfo').textContent = `${pct}% · ${fmt(elapsed)}`;
-  api.send('status', {running, counting: counting(), drive: S.drive, listening: running && voiceOn, elapsed, progress: sIdx.length ? sb[pos] / sIdx.length : 0, message: msgText, error: msgErr});
+  api.send('status', {running, counting: counting(), drive: S.drive, listening: running && voiceOn && !muted, elapsed, progress: sIdx.length ? sb[pos] / sIdx.length : 0, message: msgText, error: msgErr});
 }
 
 /* ---------- wiring ---------- */
@@ -491,6 +547,7 @@ function loadScript(text){
   scriptText = text || ''; const keep = pos;
   buildModel(); renderTrack(); pos = Math.min(keep, n); resetClasses(); layout();
   recogKey = '';
+  if (sIdx.length && msgChip && msgChip.text.startsWith('Add a script')) message(null);
 }
 function applySettings(ns){
   const modeChanged = ns.mode !== S.mode || ns.plen !== S.plen, driveChanged = ns.drive !== S.drive;
@@ -516,7 +573,39 @@ api.on('cmd', c => {
 $('bPlay').onclick = toggle;
 $('bRestart').onclick = restart;
 $('bScript').onclick = () => api.send('cmd', 'focus-control');
-$('bMore').onclick = () => api.send('cmd', 'focus-control');
+$('bMic').onclick = () => {
+  muted = !muted;
+  if (muted){ level = 0; heardPartial = []; }
+  message(muted ? 'Microphone muted. Your place is held.' : null);
+  updateUi();
+};
+
+/* ---------- ⋮ menu ---------- */
+const menu = $('menu');
+function syncMenu(){
+  const na = PLATFORM === 'linux', on = S.protect && !na;
+  const [head, body] = na ? ['Visible in recordings', 'Linux doesn’t let apps hide from screen capture.']
+    : on ? (PLATFORM === 'darwin' ? ['Partly hidden from recording', 'macOS only hides it from some apps.'] : ['Hidden from recording & sharing', 'Others can’t see Eyeline in your recordings or screen shares.'])
+    : ['Visible in recordings', 'Turn on hiding in Settings › Privacy.'];
+  $('mPrivHead').textContent = head; $('mPrivBody').textContent = body;
+  $('mPriv').className = 'mstate ' + (on ? (PLATFORM === 'darwin' ? 'part' : 'safe') : 'off');
+}
+function openMenu(){
+  syncMenu(); menu.hidden = false;
+  const b = $('bMore').getBoundingClientRect(), bx = box.getBoundingClientRect();
+  menu.style.top = (b.bottom - bx.top + 6) + 'px';
+  menu.style.left = Math.max(0, Math.min(b.right - bx.left - menu.offsetWidth, bx.width - menu.offsetWidth)) + 'px';
+  $('bMore').setAttribute('aria-expanded', 'true'); $('bMore').classList.add('on');
+  queueFit();
+}
+function closeMenu(){ if (menu.hidden) return; menu.hidden = true; $('bMore').setAttribute('aria-expanded', 'false'); $('bMore').classList.remove('on'); queueFit(); }
+$('bMore').onclick = () => menu.hidden ? openMenu() : closeMenu();
+$('mSettings').onclick = () => { closeMenu(); api.send('cmd', 'focus-control'); };
+$('mCenter').onclick = () => { closeMenu(); api.send('cmd', 'reset-position'); };
+$('mQuit').onclick = () => { closeMenu(); api.send('cmd', 'quit'); };
+document.addEventListener('pointerdown', e => { if (!menu.hidden && !menu.contains(e.target) && !$('bMore').contains(e.target)) closeMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+window.addEventListener('blur', () => closeMenu());
 $('bEnd').onclick = () => { pause(); api.send('cmd', 'hide'); };
 $('bCompact').onclick = () => setS({compact: !S.compact});
 $('bBack').onclick = () => lineStep(-1);
@@ -565,11 +654,18 @@ box.addEventListener('pointerup', endDrag);
 box.addEventListener('pointercancel', endDrag);
 box.addEventListener('lostpointercapture', endDrag);
 window.addEventListener('blur', () => dlog('window blur' + (dragging ? ' (while dragging)' : '')));
-function fit(){
-  sendHitRects();
-  api.send('overlay-fit', {needW: S.width + 40, needH: Math.ceil(box.getBoundingClientRect().bottom) + 26, innerW: window.innerWidth, innerH: window.innerHeight});
+function fitToolbar(){
+  const tb = $('toolbar'), room = box.clientWidth;
+  tb.classList.remove('t1', 't2', 't3');
+  for (const c of ['t1', 't2', 't3']){ if (tb.scrollWidth <= room) break; tb.classList.add(c); }
 }
-let fitQueued = false;
+function fit(){
+  fitToolbar();
+  sendHitRects();
+  const bottom = Math.max(box.getBoundingClientRect().bottom, menu.hidden ? 0 : menu.getBoundingClientRect().bottom);
+  api.send('overlay-fit', {needW: S.width + 40, needH: Math.ceil(bottom) + 26, innerW: window.innerWidth, innerH: window.innerHeight});
+}
+var fitQueued = false;
 function queueFit(){ if (fitQueued) return; fitQueued = true; requestAnimationFrame(() => { fitQueued = false; fit(); }); }
 new ResizeObserver(queueFit).observe(box);
 window.addEventListener('resize', queueFit);
