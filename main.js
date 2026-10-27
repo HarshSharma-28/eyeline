@@ -1,7 +1,7 @@
 // Eyeline — floating teleprompter overlay for Windows.
 // Control window: script + settings. Overlay window: frameless, transparent,
 // always on top, click-through text that moves as you speak.
-const { app, BrowserWindow, ipcMain, globalShortcut, screen, session, net, shell, systemPreferences } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut, screen, session, net, shell, systemPreferences, clipboard, Menu } = require('electron');
 const IS_MAC = process.platform === 'darwin', IS_LINUX = process.platform === 'linux';
 // The overlay positions itself and stays on top, which Wayland doesn't allow apps to do; run through X11 (XWayland) instead.
 if (IS_LINUX) app.commandLine.appendSwitch('ozone-platform', 'x11');
@@ -70,6 +70,7 @@ function createControl() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
   control.loadURL(pageUrl('control.html'));
+  control.webContents.on('will-navigate', e => e.preventDefault());
   control.setContentProtection(!!state.settings.protect);
   control.once('ready-to-show', () => control.show());
   control.webContents.on('did-finish-load', () => toControl('overlay-visible', !!(overlay && overlay.isVisible())));
@@ -98,6 +99,8 @@ function createOverlay() {
   overlay.setVisibleOnAllWorkspaces(true, IS_MAC ? { visibleOnFullScreen: true } : undefined);
   applyOverlayFlags();
   overlay.loadURL(pageUrl('overlay.html'));
+  overlay.webContents.on('will-navigate', e => e.preventDefault());
+  overlay.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   overlay.webContents.on('did-finish-load', () => {
     overlay.webContents.send('init', { settings: state.settings, script: state.script });
     showOverlay(true);
@@ -145,9 +148,17 @@ ipcMain.on('cmd', (_, c) => {
     state.settings.overlayX = null; state.settings.overlayY = null; save();
     if (overlay) overlay.setBounds(overlayBounds(overlay.getBounds().height));
     showOverlay(true);
-  } else if (c === 'focus-control') { if (control) { control.show(); control.focus(); } }
+  } else if (c === 'focus-control') { focusControl(); }
+  else if (c === 'need-script') { focusControl(); toControl('need-script'); }
+  else if (c === 'reset-settings') {
+    state.settings = { ...DEFAULTS }; save(); applyOverlayFlags();
+    if (overlay) overlay.setBounds(overlayBounds(overlay.getBounds().height));
+    toOverlay('settings', state.settings); toControl('settings', state.settings);
+  } else if (c === 'quit') { app.quit(); }
   else { if (c === 'play' || c === 'toggle') showOverlay(true); toOverlay('cmd', c); }
 });
+function focusControl() { if (!control) return; if (control.isMinimized()) control.restore(); control.show(); control.focus(); }
+ipcMain.handle('clipboard-read', () => clipboard.readText());
 // The overlay reports the size it needs and the size it actually got. Windows at fractional
 // display scaling can hand back a smaller window than requested, so correct by the difference.
 let fitTries = 0, fitReset = 0;
@@ -275,13 +286,14 @@ function registerShortcuts() {
     'CommandOrControl+Shift+Left': () => toOverlay('cmd', 'slower'),
     'CommandOrControl+Shift+R': () => toOverlay('cmd', 'restart'),
     'CommandOrControl+Shift+H': () => overlay && showOverlay(!overlay.isVisible()),
-    'CommandOrControl+Shift+E': () => { if (control) { if (control.isMinimized()) control.restore(); control.show(); control.focus(); } },
+    'CommandOrControl+Shift+E': () => focusControl(),
     'CommandOrControl+Shift+L': () => { state.settings.clickThrough = !state.settings.clickThrough; save(); applyOverlayFlags(); toOverlay('settings', state.settings); toControl('settings', state.settings); }
   };
   for (const [k, fn] of Object.entries(map)) { try { globalShortcut.register(k, fn); } catch (e) {} }
 }
 
 app.whenReady().then(async () => {
+  Menu.setApplicationMenu(IS_MAC ? Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }]) : null);
   dlog('--- Eyeline start', process.versions.electron, 'scale', screen ? '' : '');
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(perm === 'media'));
   session.defaultSession.setPermissionCheckHandler((wc, perm) => perm === 'media');
